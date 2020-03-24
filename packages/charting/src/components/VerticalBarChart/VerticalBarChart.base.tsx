@@ -67,6 +67,54 @@ export class VerticalBarChartBase extends React.Component<IVerticalBarChartProps
     });
   }
 
+  private _createWrap(node: SVGGElement | null, xAxis: numericAxis | stringAxis): any {
+    if (node === null) {
+      return;
+    }
+    const axisNode = d3Select(node).call(xAxis);
+    // axisNode.selectAll('text').attr('class', this._classNames.xAxisText!);
+    axisNode.selectAll('.tick text').call(wrap, 10);
+
+    function wrap(text: any, width: any) {
+      text.each(function() {
+        const text = d3Select(this);
+        const words = text
+          .text()
+          .split(/\s+/)
+          .reverse();
+        let word: string = '';
+        let line: any = [];
+        let lineNumber: number = 0;
+        const lineHeight = 0.87; // ems
+        const y = text.attr('y');
+        const dy = parseFloat(text.attr('dy'));
+        let tspan = text
+          .text(null)
+          .append('tspan')
+          .attr('x', 0)
+          .attr('y', y)
+          .attr('dy', dy + 'em');
+        console.log(tspan, 'tspan', y);
+        while ((word = words.pop())) {
+          line.push(word);
+          tspan.text(line.join(' '));
+          if (tspan.node()!.getComputedTextLength() > 15) {
+            line.pop();
+            tspan.text(line.join(' '));
+            line = [word];
+            tspan = text
+              .append('tspan')
+              .attr('x', 0)
+              .attr('y', y)
+              .attr('dy', lineNumber * lineHeight + dy + 'em')
+              .text(word);
+          }
+          lineNumber++;
+        }
+      });
+    }
+  }
+
   private _setXAxis(node: SVGGElement | null, xAxis: numericAxis | stringAxis): void {
     if (node === null) {
       return;
@@ -75,6 +123,7 @@ export class VerticalBarChartBase extends React.Component<IVerticalBarChartProps
     axisNode.selectAll('.domain').attr('class', this._classNames.xAxisDomain!);
     axisNode.selectAll('line').attr('class', this._classNames.xAxisTicks!);
     axisNode.selectAll('text').attr('class', this._classNames.xAxisText!);
+    this._createWrap(node, xAxis);
   }
 
   private _setYAxis(node: SVGElement | null, yAxis: numericAxis | stringAxis): void {
