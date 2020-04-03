@@ -1,7 +1,7 @@
 import { IGroupedVerticalBarChartProps, IGroupedVerticalBarChartStyles } from './GroupedVerticalBarChart.types';
 
 export const getStyles = (props: IGroupedVerticalBarChartProps): IGroupedVerticalBarChartStyles => {
-  const { theme, width, height, className, showXAxisPath } = props;
+  const { theme, width, height, className, showXAxisPath, legendColor, shouldHighlight } = props;
   return {
     root: [
       theme!.fonts.medium, // check this theme obj may undefined case
@@ -44,6 +44,38 @@ export const getStyles = (props: IGroupedVerticalBarChartProps): IGroupedVertica
           display: 'none', // change based on showXAxisPath
         },
       },
+    },
+
+    legendContainer: {
+      marginTop: '8px',
+      marginLeft: '35px',
+    },
+
+    hoverCardRoot: {
+      paddingLeft: '16px',
+      paddingRight: '22px',
+      paddingTop: '15px',
+      paddingBottom: '8px',
+    },
+
+    hoverCardTextStyles: [
+      theme.fonts.small,
+      {
+        lineHeight: '14px',
+      },
+    ],
+
+    hoverCardDataStyles: [
+      theme.fonts.xxLarge,
+      {
+        lineHeight: '31px',
+        color: legendColor === '' ? theme.palette.black : legendColor,
+      },
+    ],
+
+    opacityChangeOnHover: {
+      opacity: shouldHighlight ? '' : '0.1',
+      // cursor: href ? 'pointer' : 'default',
     },
   };
 };
