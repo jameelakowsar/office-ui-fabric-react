@@ -149,7 +149,7 @@ export interface IGVSBarChartSeriesPoint {
   /**
    * Text for // need to check use of this
    */
-  name: string;
+  key: string;
 
   /**
    * Data for bar height of Grouped vertical bar chart
@@ -171,10 +171,18 @@ export interface IGroupedVerticalBarChartDataPoint {
   /**
    * Data for X axis label
    */
-  xAxisPoint: string;
+  name: string;
 
   /**
    * Data points for Grouped vertical bar chart
    */
   series: IGVSBarChartSeriesPoint[];
+}
+
+export interface IGVDataPoint {
+  [key: string]: number | string;
+}
+
+export interface IGVSingleDataPoint {
+  [key: string]: IGVDataPoint;
 }

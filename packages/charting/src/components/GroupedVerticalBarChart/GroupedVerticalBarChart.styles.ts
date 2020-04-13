@@ -1,7 +1,7 @@
 import { IGroupedVerticalBarChartProps, IGroupedVerticalBarChartStyles } from './GroupedVerticalBarChart.types';
 
 export const getStyles = (props: IGroupedVerticalBarChartProps): IGroupedVerticalBarChartStyles => {
-  const { theme, width, height, className, showXAxisPath, legendColor, shouldHighlight } = props;
+  const { theme, className, showXAxisPath, showYAxisPath, legendColor, href } = props;
   return {
     root: [
       theme!.fonts.medium, // check this theme obj may undefined case
@@ -25,7 +25,7 @@ export const getStyles = (props: IGroupedVerticalBarChartProps): IGroupedVertica
           width: '1px',
         },
         path: {
-          display: 'none', // chnage based on showYAxisPath
+          display: showXAxisPath ? 'block' : 'none',
         },
       },
     },
@@ -34,14 +34,13 @@ export const getStyles = (props: IGroupedVerticalBarChartProps): IGroupedVertica
       selectors: {
         text: {
           ...theme!.fonts.medium,
-          // opacity: 1,
         },
         line: {
           opacity: 0.2, // change them later
           width: '1px',
         },
         path: {
-          display: 'none', // change based on showXAxisPath
+          display: showYAxisPath ? 'block' : 'none',
         },
       },
     },
@@ -74,8 +73,7 @@ export const getStyles = (props: IGroupedVerticalBarChartProps): IGroupedVertica
     ],
 
     opacityChangeOnHover: {
-      opacity: shouldHighlight ? '' : '0.1',
-      // cursor: href ? 'pointer' : 'default',
+      cursor: href ? 'pointer' : 'default',
     },
   };
 };

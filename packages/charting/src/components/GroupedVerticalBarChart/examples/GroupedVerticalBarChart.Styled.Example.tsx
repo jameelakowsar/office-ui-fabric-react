@@ -8,38 +8,15 @@ interface IRootStyles {
   width: string;
 }
 
-export class GroupedVerticalBarChartBasicExample extends React.Component<Readonly<{}>, {}> {
+export class GroupedVerticalBarChartStyledExample extends React.Component<Readonly<{}>, {}> {
   public render(): React.ReactNode {
     const data = [
-      // {
-      //   name: 'sdfgdsg',
-      //   series: [
-      //     {
-      //       key: 'series1',
-      //       data: 14,
-      //       color: DefaultPalette.accent,
-      //       legend: 'MetaData1',
-      //     },
-      //     {
-      //       key: 'series2',
-      //       data: 90,
-      //       color: DefaultPalette.blueMid,
-      //       legend: 'MetaData2',
-      //     },
-      //     {
-      //       key: 'series3',
-      //       data: 33,
-      //       color: DefaultPalette.blueLight,
-      //       legend: 'MetaData3',
-      //     },
-      //   ],
-      // },
       {
         name: 'India',
         series: [
           {
             key: 'series1',
-            data: 90,
+            data: 66,
             color: DefaultPalette.accent,
             legend: 'MetaData1',
           },
@@ -80,31 +57,44 @@ export class GroupedVerticalBarChartBasicExample extends React.Component<Readonl
           },
         ],
       },
+      {
+        name: 'Austraila',
+        series: [
+          {
+            key: 'series1',
+            data: 54,
+            color: DefaultPalette.accent,
+            legend: 'MetaData1',
+          },
+          {
+            key: 'series2',
+            data: 72,
+            color: DefaultPalette.blueMid,
+            legend: 'MetaData2',
+          },
+          {
+            key: 'series3',
+            data: 18,
+            color: DefaultPalette.blueLight,
+            legend: 'MetaData3',
+          },
+        ],
+      },
     ];
 
     const rootStyle: IRootStyles = { width: '650px', height: '400px' };
 
     return (
       <div className={mergeStyles(rootStyle)}>
-        <GroupedVerticalBarChart data={data} showYAxisGridLines />
+        <GroupedVerticalBarChart
+          data={data}
+          showXAxisGridLines
+          showYAxisGridLines
+          yAxisTickCount={10}
+          showXAxisPath
+          showYAxisPath
+        />
       </div>
     );
   }
 }
-
-// const a = [
-//   {
-//     series1: {
-//       data: 10,
-//       legend: 'a',
-//     },
-//     series2: {
-//       data: 90,
-//       legend: 'b',
-//     },
-//     xPoint: 'India',
-//   },
-//   {
-
-//   }
-// ];
