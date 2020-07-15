@@ -1,0 +1,8 @@
+{
+  "type": "patch",
+  "comment": "line chart & vertical bar chart -high contrast support to y axis lines updated",
+  "packageName": "@uifabric/charting",
+  "email": "email not defined",
+  "dependentChangeType": "patch",
+  "date": "2020-07-15T06:22:12.472Z"
+}
