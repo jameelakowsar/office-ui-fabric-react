@@ -4,6 +4,10 @@ import { LineChartBase } from './LineChart.base';
 import { AreaChartBase } from '../AreaChart/AreaChart.base';
 import { getStyles } from './LineChart.styles';
 
+import { ILineChartState } from './LineChart.base';
+
+export { ILineChartState };
+
 // Create a LineChart variant which uses these default styles and this styled subcomponent.
 export const LineChart: React.FunctionComponent<ILineChartProps> = styled<
   ILineChartProps,

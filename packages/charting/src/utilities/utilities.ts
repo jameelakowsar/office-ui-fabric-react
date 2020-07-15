@@ -34,6 +34,7 @@ export interface IXAxisParams {
   showRoundOffXTickValues?: boolean;
   tickSize?: number;
   tickPadding?: number;
+  points?: any;
 }
 export interface ITickParams {
   tickValues?: Date[] | number[];
@@ -41,6 +42,7 @@ export interface ITickParams {
 }
 
 export interface IYAxisParams {
+  points?: any;
   margins: IMargins;
   containerWidth: number;
   containerHeight: number;
@@ -73,7 +75,7 @@ export interface IFitContainerParams {
   container: HTMLDivElement | null | HTMLElement;
 }
 
-export function createNumericXAxis(points: ILineChartPoints[], xAxisParams: IXAxisParams) {
+export function createNumericXAxis(xAxisParams: IXAxisParams) {
   const {
     xMin,
     xMax,
@@ -84,6 +86,7 @@ export function createNumericXAxis(points: ILineChartPoints[], xAxisParams: IXAx
     tickPadding = 10,
     xAxisCount = 10,
     xAxisElement,
+    points,
   } = xAxisParams;
   const xMinVal = xMin ? xMin : 0;
   const xMaxVal = xMax
@@ -111,12 +114,13 @@ export function createNumericXAxis(points: ILineChartPoints[], xAxisParams: IXAx
   return xAxisScale;
 }
 
-export function createDateXAxis(points: ILineChartPoints[], xAxisParams: IXAxisParams, tickParams: ITickParams) {
+export function createDateXAxis(xAxisParams: IXAxisParams, tickParams: ITickParams) {
+  console.log(tickParams, 'tickparams', xAxisParams);
   const xAxisData: Date[] = [];
   let sDate = new Date();
   // selecting least date and comparing it with data passed to get farthest Date for the range on X-axis
   let lDate = new Date(-8640000000000000);
-  points.map((singleLineChartData: ILineChartPoints) => {
+  xAxisParams.points.map((singleLineChartData: ILineChartPoints) => {
     singleLineChartData.data.map((point: ILineChartDataPoint) => {
       xAxisData.push(point.x as Date);
       if (point.x < sDate) {
@@ -153,7 +157,7 @@ export function prepareDatapoints(maxVal: number, minVal: number, splitInto: num
   return dataPointsArray;
 }
 
-export function createYAxis(points: ILineChartPoints[], yAxisParams: IYAxisParams) {
+export function createYAxis(yAxisParams: IYAxisParams) {
   const {
     finalYMaxVal = 0,
     finalYMinVal = 0,
@@ -169,6 +173,7 @@ export function createYAxis(points: ILineChartPoints[], yAxisParams: IYAxisParam
     yAxisTickCount = 4,
     eventAnnotationProps,
     eventLabelHeight,
+    points,
   } = yAxisParams;
   let finalYmax: number;
   let finalYmin: number;

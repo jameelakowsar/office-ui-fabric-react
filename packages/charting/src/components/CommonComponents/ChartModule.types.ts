@@ -2,15 +2,10 @@ import { ITheme, IStyle } from 'office-ui-fabric-react/lib/Styling';
 import { IStyleFunctionOrObject } from 'office-ui-fabric-react/lib/Utilities';
 import { IOverflowSetProps } from 'office-ui-fabric-react/lib/OverflowSet';
 import { IFocusZoneProps } from '@fluentui/react-focus';
-import { IChartProps } from '../../types/IDataPoint';
-import { IEventAnnotation } from '../../types/IEventAnnotation';
 import { IMargins } from '../../utilities/index';
 export { IChartProps, IDataPoint, ILineChartDataPoint, ILineChartPoints } from '../../types/IDataPoint';
 
-export interface ILineChart {}
-
-export interface ILineChartProps {
-  render: any;
+export interface IChartModuleProps {
   /**
    * Data to render in the chart.
    */
@@ -44,7 +39,7 @@ export interface ILineChartProps {
   /**
    * Call to provide customized styling that will layer on top of the variant rules.
    */
-  styles?: IStyleFunctionOrObject<ILineChartStyleProps, ILineChartStyles>;
+  styles?: IStyleFunctionOrObject<IChartModuleStyleProps, IChartModuleStyles>;
 
   /**
    * Width of line stroke
@@ -139,26 +134,12 @@ export interface ILineChartProps {
   hideTooltip?: boolean;
 
   /**
-   * Show event annotation
-   */
-  eventAnnotationProps?: IEventsAnnotationProps;
-
-  /**
    * Margins for the chart
    */
   margins?: IMargins;
 }
 
-export interface IEventsAnnotationProps {
-  events: IEventAnnotation[];
-  strokeColor: string;
-  labelColor: string;
-  labelHeight?: number;
-  labelWidth?: number;
-  mergedLabel: (count: number) => string;
-}
-
-export interface ILineChartStyleProps {
+export interface IChartModuleStyleProps {
   /**
    * Theme (provided through customization.)
    */
@@ -185,7 +166,7 @@ export interface ILineChartStyleProps {
   color?: string;
 }
 
-export interface ILineChartStyles {
+export interface IChartModuleStyles {
   /**
    *  Style for the root element.
    */
@@ -245,4 +226,69 @@ export interface ILineChartStyles {
    * styles for callout y-content
    */
   calloutlegendText?: IStyle;
+}
+
+export interface IWrapperProps {
+  /**
+   * Data to render in the chart.
+   */
+  data: IChartProps;
+
+  /**
+   * Type of x axis
+   * @default false that means if prop not provided, it x axis will be considered as numberic axis.
+   */
+  isXaxisDateType?: boolean;
+
+  maxOfYVal?: number;
+
+  /**
+   * Width of the chart.
+   */
+  width: number;
+
+  /**
+   * Height of the chart.
+   */
+  height: number;
+
+  /** decides wether to show/hide legends
+   * @defaultvalue false
+   */
+  hideLegend?: boolean;
+
+  /**
+   * this prop takes its parent as a HTML element to define the width and height of the line chart
+   */
+  parentRef?: HTMLElement | null;
+
+  /**
+   * Additional CSS class(es) to apply to the Chart.
+   */
+  className?: string;
+
+  /**
+   * Theme (provided through customization.)
+   */
+  theme?: ITheme;
+
+  /**
+   * Call to provide customized styling that will layer on top of the variant rules.
+   */
+  styles?: IStyleFunctionOrObject<IChartModuleStyleProps, IChartModuleStyles>;
+
+  /**
+   * Margins for the chart
+   */
+  margins?: IMargins;
+
+  domainXMin: number;
+  domainXMax: number;
+
+  xAxis?: any;
+  yAxis?: any;
+  render: any;
+  _getLinesData?: any;
+  tickFormat: any;
+  tickValues: any;
 }
