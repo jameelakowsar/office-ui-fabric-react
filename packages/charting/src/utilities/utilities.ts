@@ -23,19 +23,19 @@ export interface IMargins {
    */
   bottom?: number;
 }
-
 export interface IXAxisParams {
   margins: IMargins;
   containerWidth: number;
   xAxisElement?: SVGElement | null;
-  xMin?: number | Date | null;
-  xMax?: number | Date | null;
+  domainXMin?: number | Date | null;
+  domainXMax?: number | Date | null;
   xAxisCount?: number;
   showRoundOffXTickValues?: boolean;
   tickSize?: number;
   tickPadding?: number;
   points?: any;
 }
+
 export interface ITickParams {
   tickValues?: Date[] | number[];
   tickFormat?: string;
@@ -77,8 +77,8 @@ export interface IFitContainerParams {
 
 export function createNumericXAxis(xAxisParams: IXAxisParams) {
   const {
-    xMin,
-    xMax,
+    domainXMin,
+    domainXMax,
     margins,
     containerWidth,
     showRoundOffXTickValues = false,
@@ -88,9 +88,13 @@ export function createNumericXAxis(xAxisParams: IXAxisParams) {
     xAxisElement,
     points,
   } = xAxisParams;
-  const xMinVal = xMin ? xMin : 0;
-  const xMaxVal = xMax
-    ? xMax
+  const xMinVal = domainXMin
+    ? domainXMin
+    : d3Min(points, (point: ILineChartPoints) => {
+        return d3Min(point.data, (item: ILineChartDataPoint) => item.x as number);
+      })!;
+  const xMaxVal = domainXMax
+    ? domainXMax
     : d3Max(points, (point: ILineChartPoints) => {
         return d3Max(point.data, (item: ILineChartDataPoint) => {
           return item.x as number;
@@ -115,7 +119,6 @@ export function createNumericXAxis(xAxisParams: IXAxisParams) {
 }
 
 export function createDateXAxis(xAxisParams: IXAxisParams, tickParams: ITickParams) {
-  console.log(tickParams, 'tickparams', xAxisParams);
   const xAxisData: Date[] = [];
   let sDate = new Date();
   // selecting least date and comparing it with data passed to get farthest Date for the range on X-axis

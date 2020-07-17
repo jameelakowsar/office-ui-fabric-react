@@ -10,7 +10,7 @@ export { IChartProps, IDataPoint, ILineChartDataPoint, ILineChartPoints } from '
 export interface ILineChart {}
 
 export interface ILineChartProps {
-  render: any;
+  render?: any;
   /**
    * Data to render in the chart.
    */

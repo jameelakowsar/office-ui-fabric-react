@@ -5,7 +5,7 @@ import { IFocusZoneProps } from '@fluentui/react-focus';
 import { IMargins } from '../../utilities/index';
 export { IChartProps, IDataPoint, ILineChartDataPoint, ILineChartPoints } from '../../types/IDataPoint';
 
-export interface IChartModuleProps {
+export interface IChart123ModuleProps {
   /**
    * Data to render in the chart.
    */
@@ -228,7 +228,7 @@ export interface IChartModuleStyles {
   calloutlegendText?: IStyle;
 }
 
-export interface IWrapperProps {
+export interface IChartModuleProps {
   /**
    * Data to render in the chart.
    */
@@ -238,19 +238,19 @@ export interface IWrapperProps {
    * Type of x axis
    * @default false that means if prop not provided, it x axis will be considered as numberic axis.
    */
-  isXaxisDateType?: boolean;
+  legendBars: any;
 
   maxOfYVal?: number;
 
   /**
    * Width of the chart.
    */
-  width: number;
+  width?: number;
 
   /**
    * Height of the chart.
    */
-  height: number;
+  height?: number;
 
   /** decides wether to show/hide legends
    * @defaultvalue false
@@ -282,13 +282,13 @@ export interface IWrapperProps {
    */
   margins?: IMargins;
 
-  domainXMin: number;
-  domainXMax: number;
+  domainXMin?: number;
+  domainXMax?: number;
+  hideTooltip?: boolean;
+  isXAxisDateType: boolean;
 
-  xAxis?: any;
-  yAxis?: any;
   render: any;
-  _getLinesData?: any;
-  tickFormat: any;
-  tickValues: any;
+  getGraphData?: any;
+  tickParams?: any;
+  calloutProps: any;
 }
