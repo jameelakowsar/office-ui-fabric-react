@@ -1,18 +1,16 @@
 import * as React from 'react';
-import { max as d3Max, min as d3Min } from 'd3-array';
+import { max as d3Max } from 'd3-array';
 import { scaleLinear as d3ScaleLinear } from 'd3-scale';
 import { select as d3Select, event as d3Event } from 'd3-selection';
 import { area as d3Area, stack as d3Stack, curveMonotoneX as d3CurveBasis } from 'd3-shape';
-import { classNamesFunction, getId } from 'office-ui-fabric-react/lib/Utilities';
-import { IProcessedStyleSet, IPalette, mergeStyles } from 'office-ui-fabric-react/lib/Styling';
-import { ILineChartProps, ILineChartStyleProps, ILineChartStyles } from '../LineChart/index';
+import { getId } from 'office-ui-fabric-react/lib/Utilities';
+import { IPalette } from 'office-ui-fabric-react/lib/Styling';
+import { ILineChartProps, IBasestate, IChildProps } from '../LineChart/index';
 import { ILegend, Legends } from '../Legends/index';
-import { Callout, DirectionalHint } from 'office-ui-fabric-react/lib/Callout';
+import { DirectionalHint } from 'office-ui-fabric-react/lib/Callout';
 import { ILineChartDataPoint, ILineChartPoints } from '../../types/index';
-import { calloutData, createNumericXAxis, createDateXAxis, createYAxis } from '../../utilities/index';
-import { Base } from '../CommonComponents/ChartModule';
-
-const getClassNames = classNamesFunction<ILineChartStyleProps, ILineChartStyles>();
+import { calloutData, createYAxis } from '../../utilities/index';
+import { Base } from '../CommonComponents/Wrapper';
 
 export interface IRefArrayData {
   legendText?: string;
@@ -38,37 +36,12 @@ export interface IContainerValues {
   shouldResize: boolean;
   reqID: number;
 }
-export interface IAreaChartState {
-  _width: number;
-  _height: number;
-  activeLegend: string;
-  color: string;
-  // containerWidth: number;
-  // containerHeight: number;
-  dataForHoverCard: number;
-  isCalloutVisible: boolean;
-  isLegendSelected: boolean;
-  isLegendHovered: boolean;
-  // tslint:disable-next-line:no-any
-  refSelected: any;
-  YValueHover: { legend?: string; y?: number; color?: string }[];
-  hoverYValue: string | number | null;
-  hoverXValue: string | number | null;
-  xCalloutValue?: string;
-  yCalloutValue?: string;
-}
-export interface IChildProps {
-  containerWidth: number;
-  containerHeight: number;
-  x?: any;
-  y?: any;
-}
+export interface IAreaChartState extends IBasestate {}
 
 export class AreaChartBase extends React.Component<ILineChartProps, IAreaChartState> {
   // tslint:disable-next-line:no-any
   private _calloutPoints: any;
   private _points: ILineChartPoints[];
-  private _classNames: IProcessedStyleSet<ILineChartStyles>;
   // tslint:disable-next-line:no-any
   private dataSet: any;
   private _colors: string[];
@@ -77,17 +50,13 @@ export class AreaChartBase extends React.Component<ILineChartProps, IAreaChartSt
   private _isGraphDraw: boolean = true;
   private _uniqueIdForGraph: string;
   private _verticalLineId: string;
-  private _callOutId: string;
-  private containerHeight: number = this.props.height!;
-  private containerWidth: number = this.props.width!;
+  private _circleId: string;
+  private _uniqueCallOutID: string;
+  private containerHeight: number;
+  private containerWidth: number;
+  // tslint:disable-next-line:no-any
   private _xAxisScale: any;
-  private _yAxisScale: any;
-  private xAxisElement: SVGElement | null;
   private yAxisElement: SVGElement | null;
-  private containerParams: IContainerValues;
-  private chartContainer: HTMLDivElement;
-  private legendContainer: HTMLDivElement;
-  // These margins are necessary for d3Scales to appear without cutting off
   private margins = { top: 20, right: 20, bottom: 35, left: 40 };
 
   public constructor(props: ILineChartProps) {
@@ -97,8 +66,6 @@ export class AreaChartBase extends React.Component<ILineChartProps, IAreaChartSt
       _height: this.props.height || 350,
       activeLegend: '',
       color: '',
-      // containerHeight: 0,
-      // containerWidth: 0,
       dataForHoverCard: 0,
       hoverYValue: '',
       hoverXValue: '',
@@ -114,6 +81,7 @@ export class AreaChartBase extends React.Component<ILineChartProps, IAreaChartSt
     this._points = this.props.data.lineChartData ? this.props.data.lineChartData : [];
     this._uniqueIdForGraph = getId('areaChart_');
     this._verticalLineId = getId('verticalLine_');
+    this._circleId = getId('circle');
     this._calloutPoints = this.props.data.lineChartData ? calloutData(this.props.data.lineChartData!) : [];
     this.dataSet = this._createDataSet();
   }
@@ -128,7 +96,7 @@ export class AreaChartBase extends React.Component<ILineChartProps, IAreaChartSt
       this._points = this.props.data.lineChartData ? this.props.data.lineChartData : [];
       this.dataSet = this._createDataSet();
       this._calloutPoints = this.props.data.lineChartData ? calloutData(this.props.data.lineChartData!) : [];
-      // this._drawGraph();
+      this._drawGraph(this.containerHeight, this.containerWidth);
       this._isGraphDraw = false;
     }
   }
@@ -138,19 +106,6 @@ export class AreaChartBase extends React.Component<ILineChartProps, IAreaChartSt
   }
 
   public render(): JSX.Element {
-    const { theme, className, styles, tickValues, tickFormat } = this.props;
-    const xMax = d3Max(this._points, (point: ILineChartPoints) => {
-      return d3Max(point.data, (item: ILineChartDataPoint) => item.x as number);
-    })!;
-    const xMin = d3Min(this._points, (point: ILineChartPoints) => {
-      return d3Min(point.data, (item: ILineChartDataPoint) => item.x);
-    })!;
-    const xScale = d3ScaleLinear()
-      .range([this.margins.left, this.containerWidth - this.margins.right])
-      .domain([xMin, xMax]);
-
-    this._points[0].data[0].x instanceof Date ? xScale : xScale.nice();
-
     let isDateType = false;
     if (this._points && this._points.length > 0) {
       this._points.map((chartData: ILineChartPoints) => {
@@ -160,46 +115,35 @@ export class AreaChartBase extends React.Component<ILineChartProps, IAreaChartSt
         }
       });
     }
-
     this._keys = this._createKeys();
     const legends: JSX.Element = this._getLegendData(this.props.theme!.palette);
-    this._classNames = getClassNames(styles!, {
-      theme: theme!,
-      width: this.state._width,
-      height: this.state._height,
-      className,
-    });
-    console.log(this.state.refSelected, 'selected ref');
-
     const calloutProps = {
       target: this.state.refSelected,
       isCalloutVisible: this.state.isCalloutVisible,
-      refSelected: this.state.refSelected,
       directionalHint: DirectionalHint.topRightEdge,
       YValueHover: this.state.YValueHover,
       hoverXValue: this.state.hoverXValue,
-      id: this._callOutId, // change as per axe tool
+      id: `toolTip${this._uniqueCallOutID}`,
       gapSpace: 15,
       isBeakVisible: false,
       setInitialFocus: true,
     };
     const tickParams = {
-      tickValues: tickValues,
-      tickFormat: tickFormat,
+      tickValues: this.props.tickValues,
+      tickFormat: this.props.tickFormat,
     };
     return (
       <Base
-        data={this._points}
-        width={this.props.width!}
-        height={this.props.height!}
+        {...this.props}
+        points={this._points}
         tickParams={tickParams}
-        getGraphData={this._getGraphData}
+        getGraphData={this._isGraphDraw && this._getGraphData}
         calloutProps={calloutProps}
         legendBars={legends}
         isXAxisDateType={isDateType}
         // tslint:disable-next-line:jsx-no-lambda
-        render={(props: IChildProps) => {
-          this.containerHeight = props.containerHeight;
+        children={(props: IChildProps) => {
+          this.containerHeight = props.containerHeight!;
           this.containerWidth = props.containerWidth!;
           return <g id={`graphGElement_${this._uniqueIdForGraph}`} />;
         }}
@@ -252,10 +196,10 @@ export class AreaChartBase extends React.Component<ILineChartProps, IAreaChartSt
     return keys;
   };
 
-  private _getGraphData = (xScale: any, yScale: any, containerHeight: number, containerWidth: number) => {
-    this._xAxisScale = xScale;
-    this._yAxisScale = yScale;
-    return this._drawGraph(containerHeight, containerWidth);
+  // tslint:disable-next-line:no-any
+  private _getGraphData = (xAxis: any, yAxis: any, containerHeight: number, containerWidth: number) => {
+    this._xAxisScale = xAxis;
+    this._drawGraph(containerHeight, containerWidth);
   };
 
   private _onLegendClick(customMessage: string): void {
@@ -367,21 +311,19 @@ export class AreaChartBase extends React.Component<ILineChartProps, IAreaChartSt
     }
   };
 
-  private handleMouseAction = (xLineVal: number, x: number | Date, refArrayIndex: string, xAxisCalloutData: string) => {
-    console.log(refArrayIndex, 'on mouse index');
-    d3Select(`#dot${refArrayIndex}`)
+  private handleMouseAction = (xLineVal: number, x: number | Date, circleId: string, xAxisCalloutData: string) => {
+    this._uniqueCallOutID = circleId;
+    d3Select('#' + circleId)
       .attr('fill', '#fff')
-      .attr('r', 8);
-    // .attr('aria-labelledby', this._callOutId);
-    this._callOutId = refArrayIndex;
+      .attr('r', 8)
+      .attr('aria-labelledby', `toolTip${this._uniqueCallOutID}`);
     this.updateVerticalLine(xLineVal, 'visibility');
     this.onMouseHover(d3Event.target, x, xAxisCalloutData);
   };
 
-  private mouseOutAction = (refArrayIndex: string, color: string) => {
-    console.log(refArrayIndex, 'mouse out actions');
+  private mouseOutAction = (circleId: string, color: string) => {
     this.updateVerticalLine(0, 'hidden');
-    d3Select(`#dot${refArrayIndex}`)
+    d3Select('#' + circleId)
       .attr('fill', color)
       .attr('r', 0.01);
     this.setState({
@@ -422,21 +364,21 @@ export class AreaChartBase extends React.Component<ILineChartProps, IAreaChartSt
     xLineVal: number,
     x: number | Date,
     legendTitle: string,
-    refArrayIndex: string,
+    circleId: string,
     xAxisCalloutData: string,
   ) => {
-    this._callOutId = refArrayIndex;
-    this._refArray.push({ legendText: refArrayIndex, refElement: d3Event.target });
-    d3Select(`#dot${refArrayIndex}`)
+    this._uniqueCallOutID = circleId;
+    this._refArray.push({ legendText: circleId, refElement: d3Event.target });
+    d3Select('#' + circleId)
       .attr('fill', '#fff')
       .attr('r', 8)
-      .attr('aria-labelledby', this._callOutId);
+      .attr('aria-labelledby', circleId);
     this.updateVerticalLine(xLineVal, 'visibility');
-    this.onChartFocus(d3Event.target, refArrayIndex, x, xAxisCalloutData);
+    this.onChartFocus(d3Event.target, circleId, x, xAxisCalloutData);
   };
 
   private onDataPointClick = (func: () => void, refArrayIndex: string, color: string) => {
-    d3Select(`#dot${refArrayIndex}`)
+    d3Select(`#dot_${refArrayIndex}`)
       .attr('fill', color)
       .attr('r', 8);
     if (!!func) {
@@ -503,11 +445,6 @@ export class AreaChartBase extends React.Component<ILineChartProps, IAreaChartSt
     };
     createYAxis(yAxisParams);
 
-    // const xScale = d3ScaleLinear()
-    //   .range([this.margins.left, this.state.containerWidth - this.margins.right])
-    //   .domain([xMin, xMax]);
-
-    // this._points[0].data[0].x instanceof Date ? xScale : xScale.nice();
     const yScale = d3ScaleLinear()
       .range([containerHeight - this.margins.bottom, this.margins.top])
       .domain([0, maxOfYVal]);
@@ -557,15 +494,8 @@ export class AreaChartBase extends React.Component<ILineChartProps, IAreaChartSt
       .enter()
       .append('circle')
       .attr('class', 'dot')
-      .attr(
-        'id',
-        (d: IDPointType, index: number) => `dot${d.index * stackedData[0].length + index}_${this._uniqueIdForGraph}`,
-      )
+      .attr('id', (d: IDPointType, index: number) => `${this._circleId}_${d.index * stackedData[0].length + index}`)
       .attr('focusable', true)
-      // .attr(
-      //   'aria-labelledby',
-      //   (d: IDPointType, index: number) => `${d.index * stackedData[0].length + index}_${this._uniqueIdForGraph}`,
-      // )
       .attr('data-is-focusable', true)
       .attr('cx', (d: IDPointType) => xScale(d.point.xVal))
       .attr('cy', (d: IDPointType) => yScale(d.point.values[1]))
@@ -580,18 +510,18 @@ export class AreaChartBase extends React.Component<ILineChartProps, IAreaChartSt
         return that.handleMouseAction(
           xScale(d.point.xVal),
           d.point.xVal,
-          `${d.index * stackedData[0].length + index}_${this._uniqueIdForGraph}`,
+          `${this._circleId}_${d.index * stackedData[0].length + index}`,
           this._points[d.index].data[index].xAxisCalloutData!,
         );
       })
       .on('mouseout', (d: IDPointType, index: number) =>
         that.mouseOutAction(
-          `${d.index * stackedData[0].length + index}_${this._uniqueIdForGraph}`,
+          `${this._circleId}_${d.index * stackedData[0].length + index}`,
           this._points[d.index].color,
         ),
       )
       .on('focus', (d: IDPointType, index: number) => {
-        const refArrayIndex = `${d.index * stackedData[0].length + index}_${this._uniqueIdForGraph}`;
+        const refArrayIndex = `${this._circleId}_${d.index * stackedData[0].length + index}`;
         return that.handleFocusAction(
           xScale(d.point.xVal),
           d.point.xVal,
@@ -602,14 +532,14 @@ export class AreaChartBase extends React.Component<ILineChartProps, IAreaChartSt
       })
       .on('blur', (d: IDPointType, index: number) =>
         that.mouseOutAction(
-          `${d.index * stackedData[0].length + index}_${this._uniqueIdForGraph}`,
+          `${this._circleId}_${d.index * stackedData[0].length + index}`,
           this._points[d.index].color,
         ),
       )
       .on('click', (d: IDPointType, index: number) =>
         that.onDataPointClick(
           this._points[d.index].data[index].onDataPointClick!,
-          `${d.index * stackedData[0].length + index}_${this._uniqueIdForGraph}`,
+          `${this._circleId}_${d.index * stackedData[0].length + index}`,
           this._points[d.index].color,
         ),
       );
@@ -628,76 +558,3 @@ export class AreaChartBase extends React.Component<ILineChartProps, IAreaChartSt
       .attr('stroke-dasharray', '5,5');
   };
 }
-
-// <div
-//   id="d3AreaChart"
-//   className={this._classNames.root}
-//   role={'presentation'}
-//   ref={(rootElem: HTMLDivElement) => (this.chartContainer = rootElem)}
-// >
-//   <FocusZone direction={FocusZoneDirection.horizontal}>
-//     <svg width={svgDimensions.width} height={svgDimensions.height}>
-//       <g
-//         ref={(e: SVGElement | null) => {
-//           this.xAxisElement = e;
-//         }}
-//         id="xAxisGElement"
-//         transform={`translate(0, ${svgDimensions.height - 35})`}
-//         className={this._classNames.xAxis}
-//       />
-//       <g
-//         ref={(e: SVGElement | null) => {
-//           this.yAxisElement = e;
-//         }}
-//         id="yAxisGElement"
-//         transform={`translate(40, 0)`}
-//         className={this._classNames.yAxis}
-//       />
-//       <g id={`graphGElement_${this._uniqueIdForGraph}`} />
-//     </svg>
-//   </FocusZone>
-//   <div ref={(e: HTMLDivElement) => (this.legendContainer = e)} className={this._classNames.legendContainer}>
-//     {legends}
-//   </div>
-//   {!this.props.hideTooltip && this.state.isCalloutVisible ? (
-//     <Callout
-//       id={this._callOutId}
-//       target={this.state.refSelected}
-//       gapSpace={15}
-//       isBeakVisible={false}
-//       setInitialFocus={true}
-//       directionalHint={DirectionalHint.topRightEdge}
-//     >
-//       <div className={this._classNames.calloutContentRoot}>
-//         <div className={this._classNames.calloutDateTimeContainer}>
-//           <div className={this._classNames.calloutContentX}>{this.state.hoverXValue} </div>
-//         </div>
-//         <div className={this._classNames.calloutInfoContainer}>
-//           {this.state.YValueHover &&
-//             this.state.YValueHover.map(
-//               (
-//                 xValue: {
-//                   legend?: string;
-//                   y?: number;
-//                   color?: string;
-//                   yAxisCalloutData?: string;
-//                 },
-//                 index: number,
-//               ) => (
-//                 <div
-//                   className={mergeStyles(this._classNames.calloutBlockContainer, {
-//                     borderLeft: `4px solid ${xValue.color}`,
-//                   })}
-//                 >
-//                   <div className={this._classNames.calloutlegendText}> {xValue.legend}</div>
-//                   <div className={this._classNames.calloutContentY}>
-//                     {xValue.yAxisCalloutData ? xValue.yAxisCalloutData : xValue.y}
-//                   </div>
-//                 </div>
-//               ),
-//             )}
-//         </div>
-//       </div>
-//     </Callout>
-//   ) : null}
-// </div>

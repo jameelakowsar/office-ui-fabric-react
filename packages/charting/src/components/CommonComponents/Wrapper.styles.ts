@@ -1,7 +1,7 @@
-import { IChartModuleStyleProps, IChartModuleStyles } from './ChartModule.types';
+import { IWrapperStyleProps, IWrapperStyles } from './Wrapper.types';
 import { HighContrastSelectorBlack } from 'office-ui-fabric-react/lib/Styling';
 
-export const getStyles = (props: IChartModuleStyleProps): IChartModuleStyles => {
+export const getStyles = (props: IWrapperStyleProps): IWrapperStyles => {
   const { className, theme } = props;
   const { fonts } = theme!;
   return {

@@ -1,5 +1,5 @@
 import { styled } from 'office-ui-fabric-react/lib/Utilities';
-import { ILineChartProps, ILineChartStyleProps, ILineChartStyles } from './LineChart.types';
+import { ILineChartProps, ILineChartStyles, ILineChartStyleProps } from './LineChart.types';
 import { LineChartBase } from './LineChart.base';
 import { AreaChartBase } from '../AreaChart/AreaChart.base';
 import { getStyles } from './LineChart.styles';

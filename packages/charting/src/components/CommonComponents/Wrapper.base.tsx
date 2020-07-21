@@ -1,20 +1,21 @@
 import * as React from 'react';
-import { IProcessedStyleSet, IPalette, mergeStyles } from 'office-ui-fabric-react/lib/Styling';
-import { classNamesFunction, getId } from 'office-ui-fabric-react/lib/Utilities';
-import { Callout, DirectionalHint } from 'office-ui-fabric-react/lib/Callout';
-import { IChartModuleProps, IChartModuleStyleProps, IChartModuleStyles } from './ChartModule.types';
+import { IProcessedStyleSet, mergeStyles } from 'office-ui-fabric-react/lib/Styling';
+import { classNamesFunction } from 'office-ui-fabric-react/lib/Utilities';
+import { Callout } from 'office-ui-fabric-react/lib/Callout';
+import { IWrapperStyleProps, IWrapperProps, IWrapperStyles } from './Wrapper.types';
 
 import {
-  calloutData,
   createNumericXAxis,
   createDateXAxis,
   createYAxis,
   fitContainer,
   IMargins,
+  IXAxisParams,
+  IYAxisParams,
 } from '../../utilities/index';
 import { FocusZone, FocusZoneDirection } from '@fluentui/react-focus';
 
-const getClassNames = classNamesFunction<IChartModuleStyleProps, IChartModuleStyles>();
+const getClassNames = classNamesFunction<IWrapperStyleProps, IWrapperStyles>();
 export interface IContainerValues {
   width: number;
   height: number;
@@ -27,8 +28,9 @@ export interface IWrapperState {
   _width: number;
   _height: number;
 }
-export class WrapperBase extends React.Component<IChartModuleProps, IWrapperState> {
-  private _classNames: IProcessedStyleSet<IChartModuleStyles>;
+
+export class WrapperBase extends React.Component<IWrapperProps, IWrapperState> {
+  private _classNames: IProcessedStyleSet<IWrapperStyles>;
   private chartContainer: HTMLDivElement;
   private legendContainer: HTMLDivElement;
   private containerParams: IContainerValues;
@@ -36,7 +38,7 @@ export class WrapperBase extends React.Component<IChartModuleProps, IWrapperStat
   private yAxisElement: SVGElement | null;
   private margins: IMargins;
 
-  constructor(props: IChartModuleProps) {
+  constructor(props: IWrapperProps) {
     super(props);
     this.state = {
       containerHeight: 0,
@@ -60,24 +62,14 @@ export class WrapperBase extends React.Component<IChartModuleProps, IWrapperStat
     cancelAnimationFrame(this.containerParams.reqID);
   }
 
-  public componentDidUpdate(prevProps: IChartModuleProps): void {
+  public componentDidUpdate(prevProps: IWrapperProps): void {
     if (prevProps.height !== this.props.height || prevProps.width !== this.props.width) {
       this._fitParentContainer();
     }
   }
 
   public render(): JSX.Element {
-    const {
-      theme,
-      className,
-      styles,
-      // domainXMin,
-      // domainXMax,
-      data,
-      maxOfYVal,
-      // isXAxisDateType,
-      calloutProps,
-    } = this.props;
+    const { theme, className, styles, points, maxOfYVal, calloutProps, yAxisTickFormat } = this.props;
     if (this.props.parentRef) {
       this._fitParentContainer();
     }
@@ -85,10 +77,8 @@ export class WrapperBase extends React.Component<IChartModuleProps, IWrapperStat
       margins: this.margins,
       containerWidth: this.state.containerWidth,
       xAxisElement: this.xAxisElement!,
-      // domainXMin: !isXAxisDateType && domainXMin,
-      // domainXMax: !isXAxisDateType && domainXMax,
       showRoundOffXTickValues: true,
-      points: data,
+      points: points,
     };
 
     const YAxisParams = {
@@ -96,15 +86,17 @@ export class WrapperBase extends React.Component<IChartModuleProps, IWrapperStat
       containerWidth: this.state.containerWidth,
       containerHeight: this.state.containerHeight,
       yAxisElement: this.yAxisElement,
-      // yAxisTickFormat: yAxisTickFormat!,
+      yAxisTickFormat: yAxisTickFormat!,
       yAxisTickCount: 4,
       finalYMaxVal: maxOfYVal,
       finalYMinVal: 0,
       tickPadding: 10,
       showYAxisGridLines: true,
-      points: data,
+      points,
     };
+
     this.getData(XAxisParams, YAxisParams);
+
     this._classNames = getClassNames(styles!, {
       theme: theme!,
       width: this.state._width,
@@ -115,6 +107,13 @@ export class WrapperBase extends React.Component<IChartModuleProps, IWrapperStat
       width: this.state.containerWidth,
       height: this.state.containerHeight,
     };
+    const children = this.props.children({
+      ...this.state,
+      xScale: this.props.isXAxisDateType
+        ? createDateXAxis(XAxisParams, this.props.tickParams!)
+        : createNumericXAxis(XAxisParams),
+      yScale: createYAxis(YAxisParams),
+    });
     return (
       <div
         id="d3AreaChart"
@@ -140,25 +139,21 @@ export class WrapperBase extends React.Component<IChartModuleProps, IWrapperStat
               transform={`translate(40, 0)`}
               className={this._classNames.yAxis}
             />
-            {this.props.render({
-              ...this.state,
-              x: createDateXAxis(XAxisParams, this.props.tickParams), //
-              y: createYAxis(YAxisParams),
-            })}
+            {children}
           </svg>
         </FocusZone>
         <div ref={(e: HTMLDivElement) => (this.legendContainer = e)} className={this._classNames.legendContainer}>
           {this.props.legendBars}
         </div>
-        {!this.props.hideTooltip && calloutProps.isCalloutVisible && (
+        {!this.props.hideTooltip && calloutProps!.isCalloutVisible && (
           <Callout {...calloutProps}>
             <div className={this._classNames.calloutContentRoot}>
               <div className={this._classNames.calloutDateTimeContainer}>
-                <div className={this._classNames.calloutContentX}>{calloutProps.hoverXValue} </div>
+                <div className={this._classNames.calloutContentX}>{calloutProps!.hoverXValue} </div>
               </div>
               <div className={this._classNames.calloutInfoContainer}>
-                {calloutProps.YValueHover &&
-                  calloutProps.YValueHover.map(
+                {calloutProps!.YValueHover &&
+                  calloutProps!.YValueHover.map(
                     (
                       xValue: {
                         legend?: string;
@@ -206,10 +201,11 @@ export class WrapperBase extends React.Component<IChartModuleProps, IWrapperStat
     }
   }
 
-  private getData = (XAxisParams: any, YAxisParams: any) => {
+  private getData = (XAxisParams: IXAxisParams, YAxisParams: IYAxisParams) => {
     const axis = this.props.isXAxisDateType
-      ? createDateXAxis(XAxisParams, this.props.tickParams)
+      ? createDateXAxis(XAxisParams, this.props.tickParams!)
       : createNumericXAxis(XAxisParams);
-    this.props.getGraphData(axis, createYAxis(YAxisParams), this.state.containerHeight, this.state.containerWidth);
+    this.props.getGraphData &&
+      this.props.getGraphData(axis, createYAxis(YAxisParams), this.state.containerHeight, this.state.containerWidth);
   };
 }

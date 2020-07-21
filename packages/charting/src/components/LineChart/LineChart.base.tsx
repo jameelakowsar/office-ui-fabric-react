@@ -1,24 +1,18 @@
 import * as React from 'react';
+import { Axis as D3Axis } from 'd3-axis';
 import { select as d3Select } from 'd3-selection';
 import { ILegend, Legends } from '../Legends/index';
-import { classNamesFunction, getId, find } from 'office-ui-fabric-react/lib/Utilities';
-import { IProcessedStyleSet, mergeStyles } from 'office-ui-fabric-react/lib/Styling';
-import { ILineChartProps, ILineChartStyleProps, ILineChartStyles, ILineChartPoints } from './LineChart.types';
+import { getId, find } from 'office-ui-fabric-react/lib/Utilities';
+import { ILineChartProps, ILineChartPoints, IBasestate, IChildProps } from './LineChart.types';
 import { DirectionalHint } from 'office-ui-fabric-react/lib/Callout';
 import { EventsAnnotation } from './eventAnnotation/EventAnnotation';
 import { calloutData, IMargins } from '../../utilities/index';
-import { Base } from '../CommonComponents/ChartModule';
+import { Base } from '../CommonComponents/Wrapper';
 
-const getClassNames = classNamesFunction<ILineChartStyleProps, ILineChartStyles>();
+type numericAxis = D3Axis<number | { valueOf(): number }>;
 export interface IRefArrayData {
   index?: string;
   refElement?: SVGGElement;
-}
-export interface IChildProps {
-  containerWidth?: number;
-  containerHeight?: number;
-  x?: any;
-  y?: any;
 }
 export interface IContainerValues {
   width: number;
@@ -26,46 +20,31 @@ export interface IContainerValues {
   shouldResize: boolean;
   reqID: number;
 }
-export interface ILineChartState {
-  _width: number;
-  _height: number;
-  isCalloutVisible: boolean;
-  YValueHover: { legend?: string; y?: number; color?: string }[];
-  hoverYValue: string | number | null;
-  hoverXValue: string | number | null;
-  refArray: IRefArrayData[];
-  activeLegend: string;
-  lineColor: string;
-  // tslint:disable-next-line:no-any
-  refSelected: any;
-  hoveredLineColor: string;
-  selectedLegend: string;
-  color: string;
-}
+export interface ILineChartState extends IBasestate {}
+
 export class LineChartBase extends React.Component<ILineChartProps, ILineChartState> {
   private _points: ILineChartPoints[];
   // tslint:disable-next-line:no-any
   private _calloutPoints: any[];
-  private _classNames: IProcessedStyleSet<ILineChartStyles>;
-  private containerParams: IContainerValues;
-  private _xAxisScale: any = '';
   // tslint:disable-next-line:no-any
-  private _yAxisScale: any = '';
+  private _xAxisScale: any;
+  // tslint:disable-next-line:no-any
+  private _yAxisScale: any;
   private _circleId: string;
   private _verticalLine: string;
   private _uniqueCallOutID: string;
   private margins: IMargins;
   private eventLabelHeight: number = 36;
-  private lines: any;
+  private lines: JSX.Element[];
   constructor(props: ILineChartProps) {
     super(props);
     this.state = {
       _width: this.props.width || 600,
       _height: this.props.height || 350,
       isCalloutVisible: false,
-      hoverYValue: '',
       refArray: [],
       hoverXValue: '',
+      hoverYValue: '',
       activeLegend: '',
       YValueHover: [],
       lineColor: '',
@@ -90,9 +69,6 @@ export class LineChartBase extends React.Component<ILineChartProps, ILineChartSt
   }
 
   public componentDidUpdate(prevProps: ILineChartProps): void {
-    /** note that height and width are not used to resize or set as dimesions of the chart,
-     * fitParentContainer is responisble for setting the height and width or resizing of the svg/chart
-     */
     if (
       prevProps.height !== this.props.height ||
       prevProps.width !== this.props.width ||
@@ -104,16 +80,7 @@ export class LineChartBase extends React.Component<ILineChartProps, ILineChartSt
   }
 
   public render(): JSX.Element {
-    const {
-      theme,
-      className,
-      styles,
-      tickValues,
-      tickFormat,
-      yAxisTickFormat,
-      hideLegend = false,
-      eventAnnotationProps,
-    } = this.props;
+    const { tickValues, tickFormat, eventAnnotationProps } = this.props;
     this._points = this.props.data.lineChartData ? this.props.data.lineChartData : [];
 
     let dataType = false;
@@ -126,16 +93,8 @@ export class LineChartBase extends React.Component<ILineChartProps, ILineChartSt
       });
     }
     const legendBars = this._createLegends(this._points!);
-    this._classNames = getClassNames(styles!, {
-      theme: theme!,
-      width: this.state._width,
-      height: this.state._height,
-      color: this.state.lineColor,
-      className,
-    });
     const calloutProps = {
       isCalloutVisible: this.state.isCalloutVisible,
-      refSelected: this.state.refSelected,
       directionalHint: DirectionalHint.topAutoEdge,
       YValueHover: this.state.YValueHover,
       hoverXValue: this.state.hoverXValue,
@@ -149,43 +108,43 @@ export class LineChartBase extends React.Component<ILineChartProps, ILineChartSt
       tickFormat: tickFormat,
     };
 
-    console.log(this.state.refSelected, 'selected ref');
     return (
       <Base
-        data={this._points}
-        width={this.props.width!}
-        height={this.props.height!}
+        {...this.props}
+        points={this._points}
         getGraphData={this._getLinesData}
         calloutProps={calloutProps}
         tickParams={tickParams}
         legendBars={legendBars}
         isXAxisDateType={dataType}
         // tslint:disable-next-line:jsx-no-lambda
-        render={(props: IChildProps) => {
-          this._xAxisScale = props.x!;
-          this._yAxisScale = props.y!;
+        children={(props: IChildProps) => {
+          this._xAxisScale = props.xScale!;
+          this._yAxisScale = props.yScale!;
           return (
-            <g>
-              <line
-                x1={0}
-                y1={0}
-                x2={0}
-                y2={props.containerHeight}
-                stroke={'steelblue'}
-                id={this._verticalLine}
-                visibility={'hidden'}
-                strokeDasharray={'5,5'}
-              />
-              <g>{this.lines}</g>
-              {eventAnnotationProps && (
-                <EventsAnnotation
-                  {...eventAnnotationProps}
-                  scale={props.x!}
-                  chartYTop={this.margins.top! + this.eventLabelHeight}
-                  chartYBottom={props.containerHeight! - 35}
+            <React.Fragment>
+              <g>
+                <line
+                  x1={0}
+                  y1={0}
+                  x2={0}
+                  y2={props.containerHeight}
+                  stroke={'steelblue'}
+                  id={this._verticalLine}
+                  visibility={'hidden'}
+                  strokeDasharray={'5,5'}
                 />
-              )}
-            </g>
+                <g>{this.lines}</g>
+                {eventAnnotationProps && (
+                  <EventsAnnotation
+                    {...eventAnnotationProps}
+                    scale={props.xScale!}
+                    chartYTop={this.margins.top! + this.eventLabelHeight}
+                    chartYBottom={props.containerHeight! - 35}
+                  />
+                )}
+              </g>
+            </React.Fragment>
           );
         }}
       />
@@ -230,7 +189,8 @@ export class LineChartBase extends React.Component<ILineChartProps, ILineChartSt
     return legends;
   }
 
-  private _getLinesData = (xScale: any, yScale: any, stateValues?: any) => {
+  // tslint:disable-next-line:no-any
+  private _getLinesData = (xScale: any, yScale: numericAxis, containerHeight: number, containerWidth: number) => {
     this._xAxisScale = xScale;
     this._yAxisScale = yScale;
     return (this.lines = this._createLines());
@@ -360,7 +320,7 @@ export class LineChartBase extends React.Component<ILineChartProps, ILineChartSt
   }
 
   private _refCallback(element: SVGGElement, legendTitle: string): void {
-    this.state.refArray.push({ index: legendTitle, refElement: element });
+    this.state.refArray!.push({ index: legendTitle, refElement: element });
   }
 
   private _handleFocus = (
@@ -382,7 +342,7 @@ export class LineChartBase extends React.Component<ILineChartProps, ILineChartSt
     d3Select(`#${this._verticalLine}`)
       .attr('transform', () => `translate(${_this._xAxisScale(x)}, 0)`)
       .attr('visibility', 'visibility');
-    this.state.refArray.map((obj: IRefArrayData) => {
+    this.state.refArray!.map((obj: IRefArrayData) => {
       if (obj.index === lineId) {
         this.setState({
           isCalloutVisible: true,
@@ -456,95 +416,3 @@ export class LineChartBase extends React.Component<ILineChartProps, ILineChartSt
     }
   };
 }
-
-// <div
-//   ref={(rootElem: HTMLDivElement) => (this.chartContainer = rootElem)}
-//   className={this._classNames.root}
-//   role={'presentation'}
-// >
-//   <FocusZone direction={FocusZoneDirection.horizontal}>
-//     <svg width={svgDimensions.width} height={svgDimensions.height}>
-//       <g
-//         ref={(e: SVGElement | null) => {
-//           this.xAxisElement = e;
-//         }}
-//         transform={`translate(0, ${svgDimensions.height - this.margins.bottom!})`}
-//         className={this._classNames.xAxis}
-//       />
-//       <g
-//         ref={(e: SVGElement | null) => {
-//           this.yAxisElement = e;
-//         }}
-//         transform={`translate(${this.margins.left}, 0)`}
-//         className={this._classNames.yAxis}
-//       />
-//       <g>
-//         <line
-//           x1={0}
-//           y1={0}
-//           x2={0}
-//           y2={svgDimensions.height}
-//           stroke={'steelblue'}
-//           id={this._verticalLine}
-//           visibility={'hidden'}
-//           strokeDasharray={'5,5'}
-//         />
-//       </g>
-//       <g>{lines}</g>
-//       {eventAnnotationProps && (
-//         <EventsAnnotation
-//           {...eventAnnotationProps}
-//           scale={this._xAxisScale}
-//           chartYTop={this.margins.top! + this.eventLabelHeight}
-//           chartYBottom={svgDimensions.height - 35}
-//         />
-//       )}
-//     </svg>
-//   </FocusZone>
-//   <div ref={(e: HTMLDivElement) => (this.legendContainer = e)} className={this._classNames.legendContainer}>
-//     {!hideLegend && legendBars}
-//   </div>
-//   {!this.props.hideTooltip && this.state.isCalloutVisible && (
-//     <Callout
-//       target={this.state.refSelected}
-//       isBeakVisible={false}
-//       gapSpace={15}
-//       directionalHint={DirectionalHint.topAutoEdge}
-//       id={`toolTip${this._uniqueCallOutID}`}
-//     >
-//       <div className={this._classNames.calloutContentRoot}>
-//         <div className={this._classNames.calloutDateTimeContainer}>
-//           <div className={this._classNames.calloutContentX}>{this.state.hoverXValue} </div>
-//           {/*TO DO  if we add time for callout then will use this */}
-//           {/* <div className={this._classNames.calloutContentX}>07:00am</div> */}
-//         </div>
-//         <div className={this._classNames.calloutInfoContainer}>
-//           {this.state.YValueHover &&
-//             this.state.YValueHover.map(
-//               (
-//                 xValue: {
-//                   legend?: string;
-//                   y?: number;
-//                   color?: string;
-//                   yAxisCalloutData?: string;
-//                 },
-//                 index: number,
-//               ) => (
-//                 <div
-//                   id={`${index}_${xValue.y}`}
-//                   className={mergeStyles(this._classNames.calloutBlockContainer, {
-//                     borderLeft: `4px solid ${xValue.color}`,
-//                   })}
-//                 >
-//                   <div className={this._classNames.calloutlegendText}> {xValue.legend}</div>
-//                   <div className={this._classNames.calloutContentY}>
-//                     {xValue.yAxisCalloutData ? xValue.yAxisCalloutData : xValue.y}
-//                   </div>
-//                 </div>
-//               ),
-//             )}
-//         </div>
-//       </div>
-//     </Callout>
-//   )}
-// </div>

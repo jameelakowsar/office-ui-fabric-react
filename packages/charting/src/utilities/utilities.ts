@@ -1,7 +1,7 @@
 import { ILineChartPoints, ILineChartDataPoint, IEventsAnnotationProps } from '@uifabric/charting';
 import { max as d3Max, min as d3Min } from 'd3-array';
 import { axisBottom as d3AxisBottom, axisLeft as d3AxisLeft } from 'd3-axis';
-import { scaleLinear as d3ScaleLinear, scaleTime as d3ScaleTime } from 'd3-scale';
+import { scaleBand as d3ScaleBand, scaleLinear as d3ScaleLinear, scaleTime as d3ScaleTime } from 'd3-scale';
 import { select as d3Select } from 'd3-selection';
 import * as d3TimeFormat from 'd3-time-format';
 
@@ -33,6 +33,7 @@ export interface IXAxisParams {
   showRoundOffXTickValues?: boolean;
   tickSize?: number;
   tickPadding?: number;
+  // tslint:disable-next-line:no-any
   points?: any;
 }
 
@@ -42,6 +43,7 @@ export interface ITickParams {
 }
 
 export interface IYAxisParams {
+  // tslint:disable-next-line:no-any
   points?: any;
   margins: IMargins;
   containerWidth: number;
@@ -106,6 +108,34 @@ export function createNumericXAxis(xAxisParams: IXAxisParams) {
   showRoundOffXTickValues && xAxisScale.nice();
 
   const xAxis = d3AxisBottom(xAxisScale)
+    .tickSize(tickSize)
+    .tickPadding(tickPadding)
+    .ticks(xAxisCount)
+    .tickSizeOuter(0);
+  if (xAxisElement) {
+    d3Select(xAxisElement)
+      .call(xAxis)
+      .selectAll('text');
+  }
+  return xAxisScale;
+}
+
+export function createStringXAxis(xAxisParams: IXAxisParams) {
+  const {
+    margins,
+    containerWidth,
+    tickSize = 10,
+    tickPadding = 10,
+    xAxisCount = 10,
+    xAxisElement,
+    points,
+  } = xAxisParams;
+  const xAxisScale = d3ScaleBand()
+    // tslint:disable-next-line:no-any
+    .domain(points.map((point: any) => point.x as string))
+    .range([margins.left!, containerWidth! - margins.right!]);
+  const xAxis = d3AxisBottom(xAxisScale)
+    .tickFormat((x: string, index: number) => points[index].x as string)
     .tickSize(tickSize)
     .tickPadding(tickPadding)
     .ticks(xAxisCount)
