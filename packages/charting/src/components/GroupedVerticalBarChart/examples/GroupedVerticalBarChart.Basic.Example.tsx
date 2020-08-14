@@ -7,7 +7,7 @@ export class GroupedVerticalBarChartBasicExample extends React.Component<Readonl
   public render(): React.ReactNode {
     const data = [
       {
-        name: '2000',
+        name: 'Total complete text here',
         series: [
           {
             key: 'series1',
@@ -33,26 +33,10 @@ export class GroupedVerticalBarChartBasicExample extends React.Component<Readonl
             xAxisCalloutData: '2020/04/30',
             yAxisCalloutData: '36%',
           },
-          {
-            key: 'series4',
-            data: 66000,
-            color: DefaultPalette.blue,
-            legend: 'MetaData4',
-            xAxisCalloutData: '2020/04/30',
-            yAxisCalloutData: '66%',
-          },
-          {
-            key: 'series5',
-            data: 34000,
-            color: DefaultPalette.blueDark,
-            legend: 'MetaData5',
-            xAxisCalloutData: '2020/04/30',
-            yAxisCalloutData: '34%',
-          },
         ],
       },
       {
-        name: '2010',
+        name: 'Second cahrt data',
         series: [
           {
             key: 'series1',
@@ -78,26 +62,10 @@ export class GroupedVerticalBarChartBasicExample extends React.Component<Readonl
             xAxisCalloutData: '2020/04/30',
             yAxisCalloutData: '33%',
           },
-          {
-            key: 'series4',
-            data: 44000,
-            color: DefaultPalette.blue,
-            legend: 'MetaData4',
-            xAxisCalloutData: '2020/04/30',
-            yAxisCalloutData: '44%',
-          },
-          {
-            key: 'series5',
-            data: 72000,
-            color: DefaultPalette.blueDark,
-            legend: 'MetaData5',
-            xAxisCalloutData: '2020/04/30',
-            yAxisCalloutData: '72%',
-          },
         ],
       },
       {
-        name: '2020',
+        name: 'Kowsar shaik',
         series: [
           {
             key: 'series1',
@@ -123,22 +91,6 @@ export class GroupedVerticalBarChartBasicExample extends React.Component<Readonl
             xAxisCalloutData: '2020/04/30',
             yAxisCalloutData: '75%',
           },
-          {
-            key: 'series4',
-            data: 29000,
-            color: DefaultPalette.blue,
-            legend: 'MetaData4',
-            xAxisCalloutData: '2020/04/30',
-            yAxisCalloutData: '29%',
-          },
-          {
-            key: 'series5',
-            data: 50000,
-            color: DefaultPalette.blueDark,
-            legend: 'MetaData5',
-            xAxisCalloutData: '2020/04/30',
-            yAxisCalloutData: '90%',
-          },
         ],
       },
     ];
@@ -148,7 +100,7 @@ export class GroupedVerticalBarChartBasicExample extends React.Component<Readonl
     return (
       <div className={rootStyle}>
         <GroupedVerticalBarChart data={data} height={400} width={650} showYAxisGridLines />
-        <GroupedVerticalBarChart data={data} height={400} width={650} showYAxisGridLines />
+        {/* <GroupedVerticalBarChart data={data} height={400} width={650} showYAxisGridLines /> */}
       </div>
     );
   }

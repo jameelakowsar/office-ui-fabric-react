@@ -37,11 +37,6 @@ export interface IGroupedVerticalBarChartProps {
   yAxisTickCount?: number;
 
   /**
-   * This prop used to draw X axis grid line on tha chart. Default value will be false
-   */
-  showXAxisGridLines?: boolean;
-
-  /**
    * This prop used to draw Y axis grid lines on the chart. Default value will be false
    */
   showYAxisGridLines?: boolean;
@@ -65,19 +60,6 @@ export interface IGroupedVerticalBarChartProps {
    * this prop takes its parent as a HTML element to define the width and height of the line chart
    */
   parentRef?: HTMLElement | null;
-
-  /**
-   * This prop takes the boolean value and used for to display x-axis path or transparent.
-   * This is a optional prop and default value is false. It dont show X-Axis path as tranparent.
-   *
-   */
-  showXAxisPath?: boolean;
-
-  /**
-   * This prop takes the boolean value and used for to display y-axis path or transparent.
-   * This is a optional prop and default value is false. It dont show X-Axis path as tranparent.
-   */
-  showYAxisPath?: boolean;
 
   /**
    * Url that the data-viz needs to redirect to upon clicking on it
@@ -110,6 +92,10 @@ export interface IGroupedVerticalBarChartProps {
    * @default false
    */
   hideTooltip?: boolean;
+
+  wrapXAxisLables?: boolean;
+
+  showXAxisLablesTooltip?: boolean;
 }
 
 export interface IGroupedVerticalBarChartStyleProps {

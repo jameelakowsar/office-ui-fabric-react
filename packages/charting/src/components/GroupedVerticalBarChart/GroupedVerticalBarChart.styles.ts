@@ -2,7 +2,7 @@ import { IGroupedVerticalBarChartStyleProps, IGroupedVerticalBarChartStyles } fr
 import { HighContrastSelectorBlack, FontWeights } from 'office-ui-fabric-react/lib/Styling';
 
 export const getStyles = (props: IGroupedVerticalBarChartStyleProps): IGroupedVerticalBarChartStyles => {
-  const { theme, className, showXAxisPath, showYAxisPath, href } = props;
+  const { theme, className, href } = props;
   return {
     root: [
       theme.fonts.medium,
@@ -41,7 +41,7 @@ export const getStyles = (props: IGroupedVerticalBarChartStyleProps): IGroupedVe
           },
         },
         path: {
-          display: showXAxisPath ? 'block' : 'none',
+          display: 'none',
         },
       },
     },
@@ -71,7 +71,7 @@ export const getStyles = (props: IGroupedVerticalBarChartStyleProps): IGroupedVe
           },
         },
         path: {
-          display: showYAxisPath ? 'block' : 'none',
+          display: 'none',
         },
       },
     },

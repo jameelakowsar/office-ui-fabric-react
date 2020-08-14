@@ -320,11 +320,3 @@ export interface IGVSingleDataPoint {
    */
   [key: string]: IGVDataPoint;
 }
-
-export interface IGVForBarChart {
-  /**
-   * While forming datapoints from given prop "data"
-   * These datapoints are used for to draw graph.
-   */
-  [key: string]: IGVBarChartSeriesPoint;
-}
