@@ -35,38 +35,14 @@ export class LineChartMultipleExample extends React.Component<{}, ILineChartMult
   };
 
   private _styledExample(): JSX.Element {
-    const points: ILineChartPoints[] = [
+    const points = [
       {
         data: [
-          { x: new Date('2018/01/01'), y: 10, xAxisCalloutData: '2018/01/01', yAxisCalloutData: '10%' },
-          { x: new Date('2018/01/15'), y: 18, xAxisCalloutData: '2018/01/15', yAxisCalloutData: '18%' },
-          { x: new Date('2018/01/28'), y: 24, xAxisCalloutData: '2018/01/28', yAxisCalloutData: '24%' },
-          { x: new Date('2018/02/01'), y: 25, xAxisCalloutData: '2018/02/01', yAxisCalloutData: '25%' },
-          { x: new Date('2018/03/01'), y: 15, xAxisCalloutData: '2018/03/01', yAxisCalloutData: '15%' },
-          { x: new Date('2018/03/15'), y: 30, xAxisCalloutData: '2018/03/15', yAxisCalloutData: '30%' },
-          { x: new Date('2018/03/28'), y: 18, xAxisCalloutData: '2018/03/28', yAxisCalloutData: '18%' },
-          { x: new Date('2018/04/04'), y: 32, xAxisCalloutData: '2018/04/04', yAxisCalloutData: '32%' },
-          { x: new Date('2018/04/15'), y: 29, xAxisCalloutData: '2018/04/15', yAxisCalloutData: '29%' },
-          { x: new Date('2018/05/05'), y: 43, xAxisCalloutData: '2018/05/05', yAxisCalloutData: '43%' },
-          { x: new Date('2018/06/01'), y: 45, xAxisCalloutData: '2018/06/01', yAxisCalloutData: '45%' },
-        ],
-        legend: 'First',
-        color: DefaultPalette.blue,
-        onLegendClick: this._onLegendClickHandler,
-      },
-      {
-        data: [
-          { x: new Date('2018/01/01'), y: 10 },
-          { x: new Date('2018/01/07'), y: 18 },
-          { x: new Date('2018/01/15'), y: 24 },
-          { x: new Date('2018/02/01'), y: 25 },
-          { x: new Date('2018/03/10'), y: 15 },
-          { x: new Date('2018/03/15'), y: 30 },
-          { x: new Date('2018/03/20'), y: 18 },
-          { x: new Date('2018/04/10'), y: 32 },
-          { x: new Date('2018/04/20'), y: 29 },
-          { x: new Date('2018/05/16'), y: 43 },
-          { x: new Date('2018/06/01'), y: 45 },
+          { x: new Date('2020/07/14'), y: 2838 },
+          { x: new Date('2020/07/15'), y: 500 },
+          { x: new Date('2020-07-16'), y: 1836 },
+          // { x: new Date('2020-07-17'), y: 2836 },
+          // { x: new Date('2020-07-18'), y: 2839 },
         ],
         legend: 'Second',
         color: DefaultPalette.green,
@@ -74,17 +50,11 @@ export class LineChartMultipleExample extends React.Component<{}, ILineChartMult
       },
       {
         data: [
-          { x: new Date('2018/01/06'), y: 10 },
-          { x: new Date('2018/01/18'), y: 18 },
-          { x: new Date('2018/01/25'), y: 24 },
-          { x: new Date('2018/02/10'), y: 25 },
-          { x: new Date('2018/03/03'), y: 15 },
-          { x: new Date('2018/03/07'), y: 30 },
-          { x: new Date('2018/03/15'), y: 18 },
-          { x: new Date('2018/04/10'), y: 32 },
-          { x: new Date('2018/04/17'), y: 29 },
-          { x: new Date('2018/05/10'), y: 43 },
-          { x: new Date('2018/06/01'), y: 45 },
+          { x: new Date('2020/07/14'), y: 1101 },
+          { x: new Date('2020/07/15'), y: 2013 },
+          { x: new Date('2020-07-16'), y: 10 },
+          // { x: new Date('2020-07-17'), y: 5 },
+          // { x: new Date('2020-07-18'), y: 3 },
         ],
         legend: 'Third',
         color: DefaultPalette.red,

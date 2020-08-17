@@ -182,6 +182,7 @@ export function createYAxis(yAxisParams: IYAxisParams) {
   } = yAxisParams;
   let finalYmax: number;
   let finalYmin: number;
+  console.log(yAxisParams, 'yAxisparams');
   if (finalYMaxVal || finalYMinVal) {
     finalYmax = finalYMaxVal!;
     finalYmin = finalYMinVal!;
@@ -203,13 +204,28 @@ export function createYAxis(yAxisParams: IYAxisParams) {
   const yAxis = d3AxisLeft(yAxisScale)
     .tickPadding(tickPadding)
     .tickValues(domainValues);
-  yAxisTickFormat ? yAxis.tickFormat(yAxisTickFormat) : yAxis.ticks(yAxisTickCount, 's');
+  yAxisTickFormat ? yAxis.tickFormat(yAxisTickFormat) : yAxis.tickFormat('f');
   showYAxisGridLines && yAxis.tickSizeInner(-(containerWidth - margins.left! - margins.right!));
   yAxisElement
     ? d3Select(yAxisElement)
         .call(yAxis)
         .selectAll('text')
-    : '';
+    : // .style('text-anchor', function(d, i) {
+      //   console.log(d, i, 'd and i s');
+      //   if (i === 0) {
+      //     return 0;
+      //     console.log(i, d, 'dddddddddddddddd');
+      //   }
+      // })
+      '';
+  // d3Select(yAxisElement)
+  //   .call(yAxis)
+  //   .selectAll('text')
+  //   // .attr('class', 'text-vals')
+  //   .style('text-anchor', function(d, i) {
+  //     console.log(d, i, 'd and i s');
+  //     return i % 2 === 0 ? 'end' : 'start';
+  //   });
   return yAxisScale;
 }
 
