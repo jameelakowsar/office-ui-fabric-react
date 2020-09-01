@@ -10,13 +10,26 @@ import { Callout, DirectionalHint } from 'office-ui-fabric-react/lib/Callout';
 import { FocusZone, FocusZoneDirection } from '@fluentui/react-focus';
 import { ILegend, Legends } from '../Legends/index';
 import { ChartHoverCard } from '../../utilities/ChartHoverCard/index';
-
+// import {
+//   IVerticalStackedBarChartProps,
+//   IVerticalStackedBarChartStyleProps,
+//   IVerticalStackedBarChartStyles,
+// } from './VerticalStackedBarChart.types';
+// import { IVerticalStackedChartProps, IDataPoint, IVSChartDataPoint } from '../../types/index';
+import { ChartTypes, getXAxisType } from '../../utilities/index';
 import {
   IVerticalStackedBarChartProps,
   IVerticalStackedBarChartStyleProps,
   IVerticalStackedBarChartStyles,
+  IRefArrayData,
+  IVerticalStackedChartProps,
+  IDataPoint,
+  IVSChartDataPoint,
+  IMargins,
+  IChildProps,
 } from './VerticalStackedBarChart.types';
-import { IVerticalStackedChartProps, IDataPoint, IVSChartDataPoint } from '../../types/index';
+import { IBasestate } from '../../types';
+import { CartesianChart } from '../CommonComponents/CartesianChart';
 
 const getClassNames = classNamesFunction<IVerticalStackedBarChartStyleProps, IVerticalStackedBarChartStyles>();
 type NumericAxis = D3Axis<number | { valueOf(): number }>;
@@ -24,23 +37,27 @@ type StringAxis = D3Axis<string>;
 type NumericScale = D3ScaleLinear<number, number>;
 type StringScale = D3ScaleLinear<string, string>;
 
-export interface IRefArrayData {
-  legendText?: string;
-  refElement?: SVGGElement;
-}
-export interface IVerticalStackedBarChartState {
-  color: string;
-  containerWidth: number;
-  containerHeight: number;
-  dataForHoverCard: number;
+// export interface IRefArrayData {
+//   legendText?: string;
+//   refElement?: SVGGElement;
+// }
+// export interface IVerticalStackedBarChartState  {
+//   color: string;
+//   containerWidth: number;
+//   containerHeight: number;
+//   dataForHoverCard: number;
+//   selectedLegendTitle: string;
+//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   refSelected: any;
+//   isCalloutVisible: boolean;
+//   isLegendSelected: boolean;
+//   isLegendHovered: boolean;
+//   xCalloutValue?: string;
+//   yCalloutValue?: string;
+// }
+
+export interface IVerticalStackedBarChartState extends IBasestate {
   selectedLegendTitle: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  refSelected: any;
-  isCalloutVisible: boolean;
-  isLegendSelected: boolean;
-  isLegendHovered: boolean;
-  xCalloutValue?: string;
-  yCalloutValue?: string;
 }
 
 export class VerticalStackedBarChartBase extends React.Component<
@@ -48,6 +65,13 @@ export class VerticalStackedBarChartBase extends React.Component<
   IVerticalStackedBarChartState
 > {
   private _points: IVerticalStackedChartProps[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private _xAxisScale: any = '';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private _yAxisScale: any = '';
+  private _dataset: IDataPoint[];
+  private _bars: JSX.Element[];
+  private _isNumeric: boolean;
   private _barWidth: number;
   private _yAxisTickCount: number;
   private _colors: string[];
@@ -57,8 +81,9 @@ export class VerticalStackedBarChartBase extends React.Component<
   private _refArray: IRefArrayData[];
   private chartContainer: HTMLDivElement;
   private legendContainer: HTMLDivElement;
+  private margins: IMargins;
   // These margins are necessary for d3Scales to appear without cutting off
-  private margins = { top: 20, right: 20, bottom: 35, left: 40 };
+  // private margins = { top: 20, right: 20, bottom: 35, left: 40 };
   private minLegendContainerHeight: number = 32;
   private _isRtl: boolean = getRTL();
 
@@ -83,20 +108,20 @@ export class VerticalStackedBarChartBase extends React.Component<
     this._refArray = [];
   }
 
-  public componentDidMount(): void {
-    this._fitParentContainer();
-  }
+  // public componentDidMount(): void {
+  //   this._fitParentContainer();
+  // }
 
-  public componentWillUnmount(): void {
-    cancelAnimationFrame(this._reqID);
-  }
+  // public componentWillUnmount(): void {
+  //   cancelAnimationFrame(this._reqID);
+  // }
 
   public componentDidUpdate(prevProps: IVerticalStackedBarChartProps): void {
     /** note that height and width are not used to resize or set as dimesions of the chart,
      * fitParentContainer is responisble for setting the height and width or resizing of the svg/chart
      */
     if (prevProps.height !== this.props.height || prevProps.width !== this.props.width) {
-      this._fitParentContainer();
+      // this._fitParentContainer();
     }
   }
 
@@ -104,15 +129,15 @@ export class VerticalStackedBarChartBase extends React.Component<
     this._adjustProps();
     const dataset: IDataPoint[] = this._createDataSetLayer();
 
-    const isNumeric: boolean = dataset.length > 0 && typeof dataset[0].x === 'number';
+    this._isNumeric = dataset.length > 0 && typeof dataset[0].x === 'number';
 
-    const xAxis: NumericAxis | StringAxis = isNumeric
-      ? this._createNumericXAxis(dataset)
-      : this._createStringXAxis(dataset);
-    const yAxis: NumericAxis = this._createYAxis(dataset);
-    const legends: JSX.Element = this._getLegendData(this._points, this.props.theme!.palette);
-    const bars: JSX.Element[] = this._getBars(this._points, dataset, isNumeric);
-    const { isCalloutVisible } = this.state;
+    // const xAxis: NumericAxis | StringAxis = isNumeric
+    //   ? this._createNumericXAxis(dataset)
+    //   : this._createStringXAxis(dataset);
+    // const yAxis: NumericAxis = this._createYAxis(dataset);
+    const legendBars = this._getLegendData(this._points, this.props.theme!.palette);
+    // const bars: JSX.Element[] = this._getBars(this._points, dataset, isNumeric);
+    // const { isCalloutVisible } = this.state;
 
     const { theme, className, styles } = this.props;
     this._classNames = getClassNames(styles!, {
@@ -122,49 +147,83 @@ export class VerticalStackedBarChartBase extends React.Component<
       isRtl: this._isRtl,
     });
 
-    const svgDimensions = {
-      width: this.state.containerWidth,
-      height: this.state.containerHeight,
+    // const svgDimensions = {
+    //   width: this.state.containerWidth,
+    //   height: this.state.containerHeight,
+    // };
+    const calloutProps = {
+      isCalloutVisible: this.state.isCalloutVisible,
+      directionalHint: DirectionalHint.topRightEdge,
+      id: `toolTip${this._calloutId}`,
+      target: this.state.refSelected,
+      isBeakVisible: false,
+      gapSpace: 15,
+      Legend: this.state.selectedLegendTitle,
+      XValue: this.state.xCalloutValue!,
+      YValue: this.state.yCalloutValue ? this.state.yCalloutValue : this.state.dataForHoverCard,
+    };
+    const tickParams = {
+      tickValues: this.props.tickValues,
+      tickFormat: this.props.tickFormat,
     };
     return (
-      <div className={this._classNames.root} ref={(rootElem: HTMLDivElement) => (this.chartContainer = rootElem)}>
-        <FocusZone direction={FocusZoneDirection.vertical}>
-          <svg width={svgDimensions.width} height={svgDimensions.height}>
-            <g
-              ref={(node: SVGGElement | null) => this._setXAxis(node, xAxis)}
-              transform={`translate(0, ${svgDimensions.height - this.margins.bottom})`}
-              className={this._classNames.xAxis}
-            />
-            <g
-              ref={(node: SVGGElement | null) => this._setYAxis(node, yAxis)}
-              transform={`translate(${this._isRtl ? svgDimensions.width - this.margins.right : this.margins.left}, 0)`}
-              className={this._classNames.yAxis}
-            />
-            <g>{bars}</g>
-          </svg>
-        </FocusZone>
-        {
-          <div ref={(e: HTMLDivElement) => (this.legendContainer = e)} className={this._classNames.legendContainer}>
-            {legends}
-          </div>
-        }
-        <Callout
-          gapSpace={15}
-          isBeakVisible={false}
-          target={this.state.refSelected}
-          setInitialFocus={true}
-          hidden={!(!this.props.hideTooltip && isCalloutVisible)}
-          directionalHint={DirectionalHint.topRightEdge}
-          id={this._calloutId}
-        >
-          <ChartHoverCard
-            XValue={this.state.xCalloutValue}
-            Legend={this.state.selectedLegendTitle}
-            YValue={this.state.yCalloutValue ? this.state.yCalloutValue : this.state.dataForHoverCard}
-            color={this.state.color}
-          />
-        </Callout>
-      </div>
+      <CartesianChart
+        {...this.props}
+        points={this._dataset}
+        chartType={ChartTypes.VerticalStackedBarChart}
+        isXAxisDateType={!this._isNumeric}
+        calloutProps={calloutProps}
+        tickParams={tickParams}
+        legendBars={legendBars}
+        barwidth={this._barWidth}
+        getmargins={this._getMargins}
+        getGraphData={this._getGraphData}
+        /* eslint-disable react/jsx-no-bind */
+        // eslint-disable-next-line react/no-children-prop
+        children={(props: IChildProps) => {
+          this._xAxisScale = props.xScale!;
+          this._yAxisScale = props.yScale!;
+          return <g>{this._bars}</g>;
+        }}
+      />
+      // <div className={this._classNames.root} ref={(rootElem: HTMLDivElement) => (this.chartContainer = rootElem)}>
+      //   <FocusZone direction={FocusZoneDirection.vertical}>
+      //     <svg width={svgDimensions.width} height={svgDimensions.height}>
+      //       <g
+      //         ref={(node: SVGGElement | null) => this._setXAxis(node, xAxis)}
+      //         transform={`translate(0, ${svgDimensions.height - this.margins.bottom})`}
+      //         className={this._classNames.xAxis}
+      //       />
+      //       <g
+      //         ref={(node: SVGGElement | null) => this._setYAxis(node, yAxis)}
+      //    transform={`translate(${this._isRtl ? svgDimensions.width - this.margins.right : this.margins.left}, 0)`}
+      //         className={this._classNames.yAxis}
+      //       />
+      //       <g>{bars}</g>
+      //     </svg>
+      //   </FocusZone>
+      //   {
+      //     <div ref={(e: HTMLDivElement) => (this.legendContainer = e)} className={this._classNames.legendContainer}>
+      //       {legends}
+      //     </div>
+      //   }
+      //   <Callout
+      //     gapSpace={15}
+      //     isBeakVisible={false}
+      //     target={this.state.refSelected}
+      //     setInitialFocus={true}
+      //     hidden={!(!this.props.hideTooltip && isCalloutVisible)}
+      //     directionalHint={DirectionalHint.topRightEdge}
+      //     id={this._calloutId}
+      //   >
+      //     <ChartHoverCard
+      //       XValue={this.state.xCalloutValue}
+      //       Legend={this.state.selectedLegendTitle}
+      //       YValue={this.state.yCalloutValue ? this.state.yCalloutValue : this.state.dataForHoverCard}
+      //       color={this.state.color}
+      //     />
+      //   </Callout>
+      // </div>
     );
   }
 
@@ -177,32 +236,42 @@ export class VerticalStackedBarChartBase extends React.Component<
     this._colors = this.props.colors || [palette.blueLight, palette.blue, palette.blueMid, palette.red, palette.black];
   }
 
-  private _fitParentContainer(): void {
-    const { containerWidth, containerHeight } = this.state;
+  private _getMargins = (margins: IMargins) => {
+    this.margins = margins;
+  };
 
-    this._reqID = requestAnimationFrame(() => {
-      const legendContainerComputedStyles = getComputedStyle(this.legendContainer);
-      const legendContainerHeight =
-        (this.legendContainer.getBoundingClientRect().height || this.minLegendContainerHeight) +
-        parseFloat(legendContainerComputedStyles.marginTop || '0') +
-        parseFloat(legendContainerComputedStyles.marginBottom || '0');
+  private _getGraphData = (xScale: any, yScale: NumericAxis, containerHeight: number, containerWidth: number) => {
+    this._xAxisScale = xScale;
+    this._yAxisScale = yScale;
+    return (this._bars = this._getBars(this._points, containerHeight, this._dataset, this._isNumeric));
+  };
 
-      const container = this.props.parentRef ? this.props.parentRef : this.chartContainer;
-      const currentContainerWidth = container.getBoundingClientRect().width;
-      const currentContainerHeight =
-        container.getBoundingClientRect().height > legendContainerHeight
-          ? container.getBoundingClientRect().height
-          : 350;
-      const shouldResize =
-        containerWidth !== currentContainerWidth || containerHeight !== currentContainerHeight - legendContainerHeight;
-      if (shouldResize) {
-        this.setState({
-          containerWidth: currentContainerWidth,
-          containerHeight: currentContainerHeight - legendContainerHeight,
-        });
-      }
-    });
-  }
+  // private _fitParentContainer(): void {
+  //   const { containerWidth, containerHeight } = this.state;
+
+  //   this._reqID = requestAnimationFrame(() => {
+  //     const legendContainerComputedStyles = getComputedStyle(this.legendContainer);
+  //     const legendContainerHeight =
+  //       (this.legendContainer.getBoundingClientRect().height || this.minLegendContainerHeight) +
+  //       parseFloat(legendContainerComputedStyles.marginTop || '0') +
+  //       parseFloat(legendContainerComputedStyles.marginBottom || '0');
+
+  //     const container = this.props.parentRef ? this.props.parentRef : this.chartContainer;
+  //     const currentContainerWidth = container.getBoundingClientRect().width;
+  //     const currentContainerHeight =
+  //       container.getBoundingClientRect().height > legendContainerHeight
+  //         ? container.getBoundingClientRect().height
+  //         : 350;
+  //     const shouldResize =
+  //       containerWidth !== currentContainerWidth || containerHeight !== currentContainerHeight - legendContainerHeight;
+  //     if (shouldResize) {
+  //       this.setState({
+  //         containerWidth: currentContainerWidth,
+  //         containerHeight: currentContainerHeight - legendContainerHeight,
+  //       });
+  //     }
+  //   });
+  // }
 
   private _createDataSetLayer(): IDataPoint[] {
     const dataset: IDataPoint[] = this._points.map(singlePointData => {
@@ -218,57 +287,57 @@ export class VerticalStackedBarChartBase extends React.Component<
     return dataset;
   }
 
-  private _createNumericXAxis(dataset: IDataPoint[]): NumericAxis {
-    const xMax = d3Max(dataset, (point: IDataPoint) => point.x as number)!;
-    const xAxisScale = d3ScaleLinear()
-      .domain(this._isRtl ? [xMax, 0] : [0, xMax])
-      .nice()
-      // barWIdth/2 = for showing tick exactly middle of the bar
-      .range([
-        this.margins.left + this._barWidth / 2,
-        this.state.containerWidth - this.margins.right - this._barWidth / 2,
-      ]);
-    const xAxis = d3AxisBottom(xAxisScale)
-      .ticks(10)
-      .tickSize(10)
-      .tickSizeOuter(0)
-      .tickPadding(10);
-    return xAxis;
-  }
+  // private _createNumericXAxis(dataset: IDataPoint[]): NumericAxis {
+  //   const xMax = d3Max(dataset, (point: IDataPoint) => point.x as number)!;
+  //   const xAxisScale = d3ScaleLinear()
+  //     .domain(this._isRtl ? [xMax, 0] : [0, xMax])
+  //     .nice()
+  //     // barWIdth/2 = for showing tick exactly middle of the bar
+  //     .range([
+  //       this.margins.left + this._barWidth / 2,
+  //       this.state.containerWidth - this.margins.right - this._barWidth / 2,
+  //     ]);
+  //   const xAxis = d3AxisBottom(xAxisScale)
+  //     .ticks(10)
+  //     .tickSize(10)
+  //     .tickSizeOuter(0)
+  //     .tickPadding(10);
+  //   return xAxis;
+  // }
 
-  private _createStringXAxis(dataset: IDataPoint[]): StringAxis {
-    const xAxisScale = d3ScaleBand()
-      .domain(dataset.map((point: IDataPoint) => point.x as string))
-      .range(
-        this._isRtl
-          ? [this.state.containerWidth - this.margins.right, this.margins.left]
-          : [this.margins.left, this.state.containerWidth - this.margins.right],
-      )
-      .padding(0.1);
-    const xAxis = d3AxisBottom(xAxisScale)
-      .tickFormat((x: string, index: number) => dataset[index].x as string)
-      .tickPadding(10);
-    return xAxis;
-  }
+  // private _createStringXAxis(dataset: IDataPoint[]): StringAxis {
+  //   const xAxisScale = d3ScaleBand()
+  //     .domain(dataset.map((point: IDataPoint) => point.x as string))
+  //     .range(
+  //       this._isRtl
+  //         ? [this.state.containerWidth - this.margins.right, this.margins.left]
+  //         : [this.margins.left, this.state.containerWidth - this.margins.right],
+  //     )
+  //     .padding(0.1);
+  //   const xAxis = d3AxisBottom(xAxisScale)
+  //     .tickFormat((x: string, index: number) => dataset[index].x as string)
+  //     .tickPadding(10);
+  //   return xAxis;
+  // }
 
-  private _createYAxis(dataset: IDataPoint[]): NumericAxis {
-    const yMax = d3Max(dataset, (point: IDataPoint) => point.y)!;
-    const interval = Math.ceil(yMax / this._yAxisTickCount);
-    const domains: Array<number> = [0];
-    while (domains[domains.length - 1] < yMax) {
-      domains.push(domains[domains.length - 1] + interval);
-    }
-    const yAxisScale = d3ScaleLinear()
-      .domain([0, domains[domains.length - 1]])
-      .range([this.state.containerHeight - this.margins.bottom, this.margins.top]);
-    const axis = this._isRtl ? d3AxisRight(yAxisScale) : d3AxisLeft(yAxisScale);
-    const yAxis = axis
-      .tickSizeInner(-(this.state.containerWidth - this.margins.left - this.margins.right))
-      .tickPadding(5)
-      .tickFormat(d3Format('.2s'))
-      .tickValues(domains);
-    return yAxis;
-  }
+  // private _createYAxis(dataset: IDataPoint[]): NumericAxis {
+  //   const yMax = d3Max(dataset, (point: IDataPoint) => point.y)!;
+  //   const interval = Math.ceil(yMax / this._yAxisTickCount);
+  //   const domains: Array<number> = [0];
+  //   while (domains[domains.length - 1] < yMax) {
+  //     domains.push(domains[domains.length - 1] + interval);
+  //   }
+  //   const yAxisScale = d3ScaleLinear()
+  //     .domain([0, domains[domains.length - 1]])
+  //     .range([this.state.containerHeight - this.margins.bottom, this.margins.top]);
+  //   const axis = this._isRtl ? d3AxisRight(yAxisScale) : d3AxisLeft(yAxisScale);
+  //   const yAxis = axis
+  //     .tickSizeInner(-(this.state.containerWidth - this.margins.left - this.margins.right))
+  //     .tickPadding(5)
+  //     .tickFormat(d3Format('.2s'))
+  //     .tickValues(domains);
+  //   return yAxis;
+  // }
 
   private _onLegendClick(customMessage: string): void {
     if (this.state.isLegendSelected) {
@@ -350,7 +419,7 @@ export class VerticalStackedBarChartBase extends React.Component<
   };
 
   private _refCallback(element: SVGRectElement, legendTitle: string, index: number): void {
-    this._refArray[index] = { legendText: legendTitle, refElement: element };
+    this._refArray[index] = { index: legendTitle, refElement: element };
   }
 
   private _onBarHover(
@@ -393,7 +462,7 @@ export class VerticalStackedBarChartBase extends React.Component<
       (this.state.isLegendSelected && this.state.selectedLegendTitle === legendText)
     ) {
       this._refArray.forEach((obj: IRefArrayData, index: number) => {
-        if (obj.legendText === legendText && refArrayIndexNumber === index) {
+        if (obj.index === legendText && refArrayIndexNumber === index) {
           this.setState({
             refSelected: obj.refElement,
             isCalloutVisible: true,
@@ -523,30 +592,31 @@ export class VerticalStackedBarChartBase extends React.Component<
     return this._createBar(singleChartData, xBarScale, yBarScale, indexNumber, href, true);
   };
 
-  private _createStringBars = (
-    singleChartData: IVerticalStackedChartProps,
-    dataset: IDataPoint[],
-    indexNumber: number,
-    href: string,
-  ): JSX.Element => {
-    const yMax = d3Max(dataset, (point: IDataPoint) => point.y)!;
+  // private _createStringBars = (
+  //   singleChartData: IVerticalStackedChartProps,
+  //   dataset: IDataPoint[],
+  //   indexNumber: number,
+  //   href: string,
+  // ): JSX.Element => {
+  //   const yMax = d3Max(dataset, (point: IDataPoint) => point.y)!;
 
-    const endpointDistance = 0.5 * ((this.state.containerWidth - this.margins.right) / dataset.length);
-    const xBarScale = d3ScaleLinear()
-      .domain(this._isRtl ? [dataset.length - 1, 0] : [0, dataset.length - 1])
-      .range([
-        this.margins.left + endpointDistance - 0.5 * this._barWidth,
-        this.state.containerWidth - this.margins.right - endpointDistance - 0.5 * this._barWidth,
-      ]);
-    const yBarScale = d3ScaleLinear()
-      .domain([0, yMax])
-      .range([0, this.state.containerHeight - this.margins.bottom - this.margins.top]);
+  //   const endpointDistance = 0.5 * ((this.state.containerWidth - this.margins.right) / dataset.length);
+  //   const xBarScale = d3ScaleLinear()
+  //     .domain(this._isRtl ? [dataset.length - 1, 0] : [0, dataset.length - 1])
+  //     .range([
+  //       this.margins.left + endpointDistance - 0.5 * this._barWidth,
+  //       this.state.containerWidth - this.margins.right - endpointDistance - 0.5 * this._barWidth,
+  //     ]);
+  //   const yBarScale = d3ScaleLinear()
+  //     .domain([0, yMax])
+  //     .range([0, this.state.containerHeight - this.margins.bottom - this.margins.top]);
 
-    return this._createBar(singleChartData, xBarScale, yBarScale, indexNumber, href, false);
-  };
+  //   return this._createBar(singleChartData, xBarScale, yBarScale, indexNumber, href, false);
+  // };
 
   private _getBars = (
     _points: IVerticalStackedChartProps[],
+    containerHeight: number,
     dataset: IDataPoint[],
     isNumeric: boolean,
   ): JSX.Element[] => {
@@ -559,18 +629,18 @@ export class VerticalStackedBarChartBase extends React.Component<
     return bars;
   };
 
-  private _setXAxis(node: SVGGElement | null, xAxis: NumericAxis | StringAxis): void {
-    if (node === null) {
-      return;
-    }
-    const axisNode = d3Select(node).call(xAxis);
-    axisNode.selectAll('text').attr('class', this._classNames.xAxisText!);
-  }
+  // private _setXAxis(node: SVGGElement | null, xAxis: NumericAxis | StringAxis): void {
+  //   if (node === null) {
+  //     return;
+  //   }
+  //   const axisNode = d3Select(node).call(xAxis);
+  //   axisNode.selectAll('text').attr('class', this._classNames.xAxisText!);
+  // }
 
-  private _setYAxis(node: SVGElement | null, yAxis: NumericAxis): void {
-    if (node === null) {
-      return;
-    }
-    d3Select(node).call(yAxis);
-  }
+  // private _setYAxis(node: SVGElement | null, yAxis: NumericAxis): void {
+  //   if (node === null) {
+  //     return;
+  //   }
+  //   d3Select(node).call(yAxis);
+  // }
 }
