@@ -145,6 +145,7 @@ export class VerticalStackedBarChartBasicExample extends React.Component<{}, IVe
             data={data}
             height={this.state.height}
             width={this.state.width}
+            chartLabel="Card title"
             legendProps={{
               overflowProps: {
                 focusZoneProps: {

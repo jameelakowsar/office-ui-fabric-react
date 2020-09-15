@@ -1,7 +1,13 @@
-import { ITheme, IStyle } from 'office-ui-fabric-react/lib/Styling';
+import { IStyle } from 'office-ui-fabric-react/lib/Styling';
 import { ICalloutProps } from 'office-ui-fabric-react/lib/Callout';
 import { IRenderFunction, IStyleFunctionOrObject } from 'office-ui-fabric-react/lib/Utilities';
-import { ICartesianChartProps, IVerticalStackedChartProps, IVSChartDataPoint } from '@uifabric/charting';
+import {
+  ICartesianChartProps,
+  ICartesianChartStyleProps,
+  ICartesianChartStyles,
+  IVerticalStackedChartProps,
+  IVSChartDataPoint,
+} from '@uifabric/charting';
 
 export interface IVerticalStackedBarChartProps extends ICartesianChartProps {
   /**
@@ -47,22 +53,53 @@ export interface IVerticalStackedBarChartProps extends ICartesianChartProps {
   calloutProps?: Partial<ICalloutProps>;
 }
 
-export interface IVerticalStackedBarChartStyleProps {
-  /**
-   * Theme (provided through customization.)
-   */
-  theme: ITheme;
-  /**
-   * Link to redirect if click action for graph
-   */
-  href?: string;
+export interface IVerticalStackedBarChartStyleProps extends ICartesianChartStyleProps {}
 
+export interface IVerticalStackedBarChartStyles extends ICartesianChartStyles {
   /**
-   * prop to check if the chart is selected or hovered upon to determine opacity
+   * Style to change the opacity of bars in dataviz when we hover on a single bar or legends
    */
-  shouldHighlight?: boolean;
-}
-
-export interface IVerticalStackedBarChartStyles {
   opacityChangeOnHover?: IStyle;
+
+  /**
+   * Style for the chart.
+   * @deprecated use root instead.
+   */
+  chart?: IStyle;
+
+  /**
+   * Style for the line representing the domain of the x-axis.
+   * @deprecated - use xAxis instead.
+   */
+  xAxisDomain?: IStyle;
+
+  /**
+   * Style for the lines representing the ticks along the x-axis.
+   * @deprecated - use xAxis instead.
+   */
+  xAxisTicks?: IStyle;
+
+  /**
+   * Style for the text labeling each tick along the x-axis.
+   * @deprecated - use xAxis instead.
+   */
+  xAxisText?: IStyle;
+
+  /**
+   * Style for the line representing the domain of the y-axis.
+   * @deprecated - use xAxis instead.
+   */
+  yAxisDomain?: IStyle;
+
+  /**
+   * Style for the lines representing the ticks along the y-axis.
+   * @deprecated - use xAxis instead.
+   */
+  yAxisTicks?: IStyle;
+
+  /**
+   * Style for the text labeling each tick along the y-axis.
+   * @deprecated - use xAxis instead.
+   */
+  yAxisText?: IStyle;
 }

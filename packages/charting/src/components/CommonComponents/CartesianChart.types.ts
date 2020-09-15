@@ -226,6 +226,7 @@ export interface ICartesianChartProps {
 
   /**
    * Label to apply to the whole chart.
+   * @deprecated - Use your chart label for the chart.
    */
   chartLabel?: string;
 

@@ -4,8 +4,9 @@ import {
   VerticalStackedBarChart,
   IVSChartDataPoint,
   IVerticalStackedChartProps,
+  IVerticalStackedBarChartProps,
 } from '@uifabric/charting';
-import { DefaultPalette } from 'office-ui-fabric-react/lib/Styling';
+import { DefaultPalette, IStyle, DefaultFontStyles } from 'office-ui-fabric-react/lib/Styling';
 import { DirectionalHint } from 'office-ui-fabric-react';
 
 interface IVerticalStackedBarState {
@@ -65,6 +66,27 @@ export class VerticalStackedBarChartStyledExample extends React.Component<{}, IV
 
     const rootStyle = { width: `${this.state.width}px`, height: `${this.state.height}px` };
 
+    const textStyle: IStyle = {
+      fill: DefaultPalette.black,
+      fontSize: '10px',
+      lineHeight: '14px',
+    };
+
+    const customStyles: IVerticalStackedBarChartProps['styles'] = () => {
+      return {
+        chart: {
+          paddingBottom: '45px',
+        },
+        chartLabel: {
+          color: DefaultPalette.blueMid,
+          ...DefaultFontStyles.large,
+        },
+        xAxisText: {
+          ...textStyle,
+        },
+      };
+    };
+
     return (
       <>
         <label>change Width:</label>
@@ -78,7 +100,8 @@ export class VerticalStackedBarChartStyledExample extends React.Component<{}, IV
             width={this.state.width}
             yAxisTickCount={10}
             href={'www.google.com'}
-            // styles={customStyles}
+            // eslint-disable-next-line react/jsx-no-bind
+            styles={customStyles}
             yMaxValue={120}
             yMinValue={10}
             calloutProps={{

@@ -70,7 +70,10 @@ export class VerticalStackedBarChartBase extends React.Component<
       xCalloutValue: '',
       yCalloutValue: '',
     };
-    warnDeprecations(COMPONENT_NAME, props, { colors: 'IVSChartDataPoint.color' });
+    warnDeprecations(COMPONENT_NAME, props, {
+      colors: 'IVSChartDataPoint.color',
+      chartLabel: 'use your own title for chart',
+    });
     this._onLegendLeave = this._onLegendLeave.bind(this);
     this._handleMouseOut = this._handleMouseOut.bind(this);
     this._calloutId = getId('callout');
@@ -398,7 +401,6 @@ export class VerticalStackedBarChartBase extends React.Component<
         if (this.state.isLegendHovered || this.state.isLegendSelected) {
           shouldHighlight = this.state.selectedLegendTitle === point.legend;
         }
-
         this._classNames = getClassNames(this.props.styles!, {
           theme: this.props.theme!,
           shouldHighlight: shouldHighlight,
