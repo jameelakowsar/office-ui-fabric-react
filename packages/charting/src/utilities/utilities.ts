@@ -590,7 +590,8 @@ export function getDomainNRangeValues(
   } else {
     switch (chartType) {
       case ChartTypes.VerticalStackedBarChart:
-        domainNRangeValue = domainRangeOfStrForVSBC(margins, width, isRTL);
+      case ChartTypes.GroupedVerticalBarChart:
+        domainNRangeValue = domainRangeOfStrForVSBC(margins, width, isRTL); // change name if possbile
         break;
       default:
         domainNRangeValue = { dStartValue: 0, dEndValue: 0, rStartValue: 0, rEndValue: 0 };
