@@ -329,6 +329,15 @@ export function silceOrAppendToArray(array: string[], value: string): string[] {
   }
 }
 
+/**
+ * This method used for wrapping of x axis lables (tick values).
+ * It breaks down given text value by space separated and calculates the total height needed to display all the words.
+ * That value = removal value. This value needs to be remove from total svg height, svg will shrink and
+ * total text will be displayed.
+ * @export
+ * @param {IWrapLabelProps} wrapLabelProps
+ * @returns
+ */
 export function createWrapOfXLabels(wrapLabelProps: IWrapLabelProps) {
   const { node, xAxis, noOfCharsToTruncate, showXAxisLablesTooltip } = wrapLabelProps;
   if (node === null) {
@@ -412,6 +421,9 @@ export function createWrapOfXLabels(wrapLabelProps: IWrapLabelProps) {
   return removeVal > 0 ? removeVal : 0;
 }
 
+/**
+ * This method displays a tooltip to the x axis lables(tick values).
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function tooltipOfXAxislabels(xAxistooltipProps: any) {
   const { tooltipCls, xAxis, id } = xAxistooltipProps;
@@ -508,7 +520,7 @@ export function domainRangeOfNumericForAreaChart(
 }
 
 /**
- * Calculates Range values to the Vertical stacked bar chart for string axis
+ * Calculates Range values to the Vertical stacked bar chart and grouped verticla bar chart for string axis
  * For String axis, we need to give domain values (Not start and end array values)
  * So sending 0 as domain values. Domain will be handled at creation of string axis
  *
@@ -518,9 +530,15 @@ export function domainRangeOfNumericForAreaChart(
  * @param {boolean} isRTL
  * @returns {IDomainNRange}
  */
-export function domainRangeOfStrForVSBC(margins: IMargins, width: number, isRTL: boolean): IDomainNRange {
+export function domainRangeOfXString(
+  margins: IMargins,
+  width: number,
+  isRTL: boolean,
+  chartType: ChartTypes,
+): IDomainNRange {
   const rMin = margins.left!;
-  const rMax = width - margins.right! - (isRTL ? additionalMarginRight : 0);
+  let rMax = width - margins.right!;
+  rMax = rMax - (chartType === ChartTypes.VerticalStackedBarChart && isRTL ? additionalMarginRight : 0);
 
   return isRTL
     ? { dStartValue: 0, dEndValue: 0, rStartValue: rMax, rEndValue: rMin }
@@ -591,7 +609,7 @@ export function getDomainNRangeValues(
     switch (chartType) {
       case ChartTypes.VerticalStackedBarChart:
       case ChartTypes.GroupedVerticalBarChart:
-        domainNRangeValue = domainRangeOfStrForVSBC(margins, width, isRTL); // change name if possbile
+        domainNRangeValue = domainRangeOfXString(margins, width, isRTL, chartType);
         break;
       default:
         domainNRangeValue = { dStartValue: 0, dEndValue: 0, rStartValue: 0, rEndValue: 0 };

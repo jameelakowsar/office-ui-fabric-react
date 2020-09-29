@@ -1,35 +1,44 @@
 import * as React from 'react';
 import { max as d3Max } from 'd3-array';
-// import { Axis as D3Axis } from 'd3-axis';
 import { scaleBand as d3ScaleBand, scaleLinear as d3ScaleLinear } from 'd3-scale';
-// import { select as d3Select } from 'd3-selection';
-import { classNamesFunction, getId, getRTL } from 'office-ui-fabric-react/lib/Utilities';
+import { Axis as D3Axis } from 'd3-axis';
 import { IProcessedStyleSet, IPalette } from 'office-ui-fabric-react/lib/Styling';
 import { DirectionalHint } from 'office-ui-fabric-react/lib/Callout';
-import { XAxisTypes } from '../../utilities/index'; // createWrapOfXLabels, tooltipOfXAxislabels,
-import { warnDeprecations } from 'office-ui-fabric-react/lib/Utilities';
 import {
+  classNamesFunction,
+  getId,
+  getRTL,
+  memoizeFunction,
+  warnDeprecations,
+} from 'office-ui-fabric-react/lib/Utilities';
+import { ChartTypes, tooltipOfXAxislabels, XAxisTypes } from '../../utilities/index';
+import {
+  CartesianChart,
   ILegend,
   IGroupedVerticalBarChartData,
   IGroupedVerticalBarChartProps,
   IGroupedVerticalBarChartStyleProps,
   IGroupedVerticalBarChartStyles,
-  IGVDataPoint,
-  // IGVForBarChart,
-  IGVSingleDataPoint,
   IGVBarChartSeriesPoint,
   IMargins,
   IBasestate,
   IRefArrayData,
   Legends,
 } from '../../index';
-import { ChartTypes } from '../../utilities/index';
-import { CartesianChart } from '../CommonComponents/CartesianChart';
 
 const COMPONENT_NAME = 'GROUPED VERTICAL BAR CHART';
 const getClassNames = classNamesFunction<IGroupedVerticalBarChartStyleProps, IGroupedVerticalBarChartStyles>();
-// type StringAxis = D3Axis<string>;
-// type NumericAxis = D3Axis<number | { valueOf(): number }>;
+type StringAxis = D3Axis<string>;
+
+// This interface used for - While forming datapoints from given prop "data" in code
+interface IGVDataPoint {
+  [key: string]: number | string;
+}
+
+// While forming datapoints from given prop "data" in code. These datapoints are used for to draw graph easily.
+interface IGVSingleDataPoint {
+  [key: string]: IGVDataPoint;
+}
 export interface IGroupedVerticalBarChartState extends IBasestate {
   titleForHoverCard: string;
   dataPointCalloutProps?: IGVBarChartSeriesPoint;
@@ -39,10 +48,12 @@ export class GroupedVerticalBarChartBase extends React.Component<
   IGroupedVerticalBarChartProps,
   IGroupedVerticalBarChartState
 > {
-  private _points: IGroupedVerticalBarChartData[];
+  private _createSet: (
+    data: IGroupedVerticalBarChartData[],
+  ) => // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  { keys: string[]; xAxisLabels: string[]; datasetForBars: any };
   private _xAxisLabels: string[];
   private _groupedVerticalBarGraph: JSX.Element[];
-  private _barWidth: number;
   private _groupPadding: number = 16;
   private _classNames: IProcessedStyleSet<IGroupedVerticalBarChartStyles>;
   private _refArray: IRefArrayData[];
@@ -52,15 +63,14 @@ export class GroupedVerticalBarChartBase extends React.Component<
   private _calloutId: string;
   private _dataset: IGVDataPoint[];
   private _keys: string[];
-  // private _xAxis: any;
   private _isNumeric: boolean;
-  private _removalValue: number = 0;
   private margins: IMargins;
   private _isRtl: boolean = getRTL();
-  // private _tooltipId: string;
+  private _tooltipId: string;
 
   public constructor(props: IGroupedVerticalBarChartProps) {
     super(props);
+    this._createSet = memoizeFunction((data: IGroupedVerticalBarChartData[]) => this._createDataSetOfGVBC(data));
     this.state = {
       color: '',
       dataForHoverCard: 0,
@@ -81,25 +91,25 @@ export class GroupedVerticalBarChartBase extends React.Component<
     });
     this._refArray = [];
     this._calloutId = getId('callout');
-    // this._tooltipId = getId('GVBCTooltipId_');
-    this._adjustProps();
+    this._tooltipId = getId('GVBCTooltipId_');
   }
 
   public render(): React.ReactNode {
-    // take care of removal values
-    // RTL
-    this._adjustProps();
-    this._xAxisLabels = this._createXAxisProperties();
-    this._datasetForBars = this._createDataset();
-    this._isNumeric = this._points.length > 0 && typeof this._points[0].name === 'number';
-    const legends: JSX.Element = this._getLegendData(this.props.theme!.palette);
+    // x axis lables space to line
+    const points = this.props.data;
+    const { keys, xAxisLabels, datasetForBars } = this._createSet(points);
+    this._keys = keys;
+    this._xAxisLabels = xAxisLabels;
+    this._datasetForBars = datasetForBars;
+    this._isNumeric = points.length > 0 && typeof points[0].name === 'number';
+    const legends: JSX.Element = this._getLegendData(points, this.props.theme!.palette);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const yMax = d3Max(this._dataset, (point: any) => d3Max(this._keys, (key: string) => point[key]));
     this._yMax = Math.max(yMax, this.props.yMaxValue || 0);
     this._classNames = getClassNames(this.props.styles!, {
       theme: this.props.theme!,
-      href: this.props.href,
+      href: this.props.href!,
     });
     const calloutProps = {
       target: this.state.refSelected,
@@ -141,26 +151,29 @@ export class GroupedVerticalBarChartBase extends React.Component<
           return <g>{this._groupedVerticalBarGraph}</g>;
         }}
       />
-      //         <g
-      //           id="xAxisGElement"
-      //       ref={(node: SVGGElement | null) => this._setXAxis(node, x0Axis)}
-      //       className={this._classNames.xAxis}
-      //       transform={`translate(0, ${svgDimensions.height - 35 - this._removalValue})`}
-      //     />
     );
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private _getGraphData = (xAxis: any, yAxis: any, containerHeight: number, containerWidth: number) => {
-    this._groupedVerticalBarGraph = this._getGraphBars(containerHeight, containerWidth); // check what data needs to
+    this._groupedVerticalBarGraph = this._getGraphBars(xAxis, containerHeight, containerWidth);
   };
 
-  private _adjustProps(): void {
-    this._points = this.props.data || [];
-    this._barWidth = this.props.barwidth!;
-  }
-
   private _getMargins = (margins: IMargins) => (this.margins = margins);
+
+  private _createDataSetOfGVBC = (points: IGroupedVerticalBarChartData[]) => {
+    const keys: string[] = [];
+    const xAxisLabels: string[] = points.map(singlePoint => singlePoint.name);
+    points[0].series.forEach((singleKey: IGVBarChartSeriesPoint) => {
+      keys.push(singleKey.key);
+    });
+    const datasetForBars = this._createDataset(points);
+    return {
+      keys,
+      xAxisLabels,
+      datasetForBars,
+    };
+  };
 
   private _getCustomizedCallout = () => {
     return this.props.onRenderCalloutPerDataPoint
@@ -176,12 +189,13 @@ export class GroupedVerticalBarChartBase extends React.Component<
     return shouldHighlight ? '' : '0.1';
   };
 
-  private _getGraphBars = (containerHeight: number, containerWidth: number): JSX.Element[] => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private _getGraphBars = (xScale: any, containerHeight: number, containerWidth: number): JSX.Element[] => {
     const xScale0 = this._createX0Scale(containerWidth);
     const xScale1 = this._createX1Scale(xScale0);
     const allGroupsBars: JSX.Element[] = [];
     this._datasetForBars.forEach((singleSet: IGVSingleDataPoint) => {
-      allGroupsBars.push(this._buildGraph(singleSet, xScale0, xScale1, containerHeight));
+      allGroupsBars.push(this._buildGraph(singleSet, xScale0, xScale1, containerHeight, xScale));
     });
     return allGroupsBars;
   };
@@ -241,17 +255,25 @@ export class GroupedVerticalBarChartBase extends React.Component<
     this._refArray[refIndexNumber] = { index: legendTitle, refElement: element };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private _buildGraph = (singleSet: any, xScale0: any, xScale1: any, containerHeight: number): JSX.Element => {
+  private _buildGraph = (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    singleSet: any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    xScale0: any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    xScale1: any,
+    containerHeight: number,
+    xScale: StringAxis,
+  ): JSX.Element => {
     const singleGroup: JSX.Element[] = [];
 
-    const yBarScale = d3ScaleLinear() // check rtl support
+    const yBarScale = d3ScaleLinear()
       .domain([0, this._yMax])
-      .range([0, containerHeight! - this._removalValue - this.margins.bottom! - this.margins.top!]);
+      .range([0, containerHeight! - this.margins.bottom! - this.margins.top!]);
 
     let widthOfBar: number;
-    if (this._barWidth && this._barWidth < xScale1.bandwidth()) {
-      widthOfBar = this._barWidth;
+    if (this.props.barwidth && this.props.barwidth < xScale1.bandwidth()) {
+      widthOfBar = this.props.barwidth;
     } else {
       widthOfBar = xScale1.bandwidth();
     }
@@ -266,7 +288,7 @@ export class GroupedVerticalBarChartBase extends React.Component<
           height={Math.max(yBarScale(pointData.data), 0)}
           width={widthOfBar}
           x={xScale1(datasetKey)!}
-          y={containerHeight! - this._removalValue - this.margins.bottom! - yBarScale(pointData.data)}
+          y={Math.max(containerHeight! - this.margins.bottom! - yBarScale(pointData.data), 0)}
           data-is-focusable={true}
           opacity={this._getOpacity(pointData.legend)}
           ref={(e: SVGRectElement | null) => {
@@ -290,9 +312,9 @@ export class GroupedVerticalBarChartBase extends React.Component<
     //   const tooltipProps = {
     //     tooltipCls: this._classNames.tooltip!,
     //     id: this._tooltipId,
-    //     xAxis: this._xAxis,
+    //     xAxis: xScale,
     //   };
-    //   tooltipOfXAxislabels(tooltipProps);
+    //   xScale && tooltipOfXAxislabels(tooltipProps);
     // }
     return (
       <g key={singleSet.indexNum} transform={`translate(${xScale0(singleSet.xAxisPoint)}, 0)`}>
@@ -301,24 +323,12 @@ export class GroupedVerticalBarChartBase extends React.Component<
     );
   };
 
-  private _createXAxisProperties = (): string[] => {
-    const keys: string[] = [];
-    const colors: string[] = [];
-    const xAxisLabels: string[] = this._points.map(singlePoint => singlePoint.name);
-    this._points[0].series.forEach((singleKey: IGVBarChartSeriesPoint) => {
-      keys.push(singleKey.key);
-      colors.push(singleKey.color);
-    });
-    this._keys = keys;
-    return xAxisLabels;
-  };
-
-  private _createDataset = () => {
+  private _createDataset = (points: IGroupedVerticalBarChartData[]) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const datasetForBars: any = [];
     const dataset: IGVDataPoint[] = [];
 
-    this._points.forEach((point: IGroupedVerticalBarChartData, index: number) => {
+    points.forEach((point: IGroupedVerticalBarChartData, index: number) => {
       const singleDatasetPoint: IGVDataPoint = {};
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const singleDatasetPointforBars: any = {};
@@ -343,7 +353,11 @@ export class GroupedVerticalBarChartBase extends React.Component<
   private _createX0Scale = (containerWidth: number) => {
     const x0Axis = d3ScaleBand()
       .domain(this._xAxisLabels)
-      .range([this.margins.left!, containerWidth! - this.margins.right!])
+      .range(
+        this._isRtl
+          ? [containerWidth! - this.margins.right!, this.margins.left!]
+          : [this.margins.left!, containerWidth! - this.margins.right!],
+      )
       .padding(this._groupPadding / 100);
     return x0Axis;
   };
@@ -395,8 +409,8 @@ export class GroupedVerticalBarChartBase extends React.Component<
     }
   }
 
-  private _getLegendData = (palette: IPalette): JSX.Element => {
-    const data = this._points;
+  private _getLegendData = (points: IGroupedVerticalBarChartData[], palette: IPalette): JSX.Element => {
+    const data = points;
     const defaultPalette: string[] = [palette.blueLight, palette.blue, palette.blueMid, palette.red, palette.black];
     const actions: ILegend[] = [];
 
@@ -434,22 +448,4 @@ export class GroupedVerticalBarChartBase extends React.Component<
       />
     );
   };
-
-  // private _setXAxis(node: SVGGElement | null, xAxis: NumericAxis | StringAxis): void {
-  //   if (node === null) {
-  //     return;
-  //   }
-  //   this._xAxis = d3Select(node).call(xAxis);
-  //   const wrapLabelProps = {
-  //     node: node,
-  //     xAxis: xAxis,
-  //     showXAxisLablesTooltip: this.props.showXAxisLablesTooltip || false,
-  //     noOfCharsToTruncate: this.props.noOfCharsToTruncate || 4,
-  //   };
-  //   let temp = 0;
-  //   if (this.props.wrapXAxisLables || this.props.showXAxisLablesTooltip) {
-  //     temp = createWrapOfXLabels(wrapLabelProps) as number;
-  //   }
-  //   this._removalValue = temp;
-  // }
 }

@@ -2,6 +2,7 @@ import * as React from 'react';
 import { IProcessedStyleSet, mergeStyles } from 'office-ui-fabric-react/lib/Styling';
 import { classNamesFunction, getId, getRTL } from 'office-ui-fabric-react/lib/Utilities';
 import { Callout } from 'office-ui-fabric-react/lib/Callout';
+import { FocusZone, FocusZoneDirection } from '@fluentui/react-focus';
 import {
   ICartesianChartStyles,
   ICartesianChartStyleProps,
@@ -9,6 +10,7 @@ import {
   IYValueHover,
 } from '../../index';
 import {
+  ChartHoverCard,
   createNumericXAxis,
   createStringXAxis,
   getDomainNRangeValues,
@@ -18,11 +20,9 @@ import {
   IMargins,
   getMinMaxOfYAxis,
   XAxisTypes,
-  // createWrapOfXLabels,
+  createWrapOfXLabels,
   // tooltipOfXAxislabels,
 } from '../../utilities/index';
-import { ChartHoverCard } from '../../utilities/ChartHoverCard/index';
-import { FocusZone, FocusZoneDirection } from '@fluentui/react-focus';
 
 const getClassNames = classNamesFunction<ICartesianChartStyleProps, ICartesianChartStyles>();
 
@@ -31,6 +31,16 @@ export interface ICartesianChartState {
   containerHeight: number;
   _width: number;
   _height: number;
+  /* To update this values using setState in render method.
+   * To avoud multiple re renders, Only first time setting the value.
+   */
+  isRemoveValCalculated?: boolean;
+  /* Used for when WrapXAxisLabels props appeared.
+   * To display the total word (space separated words), Need to have more space than usual.
+   * This height will get total height need to disaply total word.
+   * These value need to be removed from actual svg height/graph height.
+   */
+  _removalValueForTextTuncate?: number;
 }
 
 /**
@@ -58,6 +68,8 @@ export class CartesianChartBase extends React.Component<IModifiedCartesianChartP
       containerWidth: 0,
       _width: this.props.width || 600,
       _height: this.props.height || 350,
+      _removalValueForTextTuncate: 0,
+      isRemoveValCalculated: true,
     };
     this.idForGraph = getId('chart_');
     this.margins = {
@@ -107,7 +119,7 @@ export class CartesianChartBase extends React.Component<IModifiedCartesianChartP
     const YAxisParams = {
       margins: this.margins,
       containerWidth: this.state.containerWidth,
-      containerHeight: this.state.containerHeight,
+      containerHeight: this.state.containerHeight - this.state._removalValueForTextTuncate!,
       yAxisElement: this.yAxisElement,
       yAxisTickFormat: this.props.yAxisTickFormat!,
       yAxisTickCount: this.props.yAxisTickCount!,
@@ -140,17 +152,19 @@ export class CartesianChartBase extends React.Component<IModifiedCartesianChartP
         xScale = createNumericXAxis(XAxisParams, this._isRtl);
     }
 
-    // const wrapLabelProps = {
-    //   node: this.xAxisElement,
-    //   xAxis: xScale,
-    //   showXAxisLablesTooltip: this.props.showXAxisLablesTooltip || false,
-    //   noOfCharsToTruncate: this.props.noOfCharsToTruncate || 4,
-    // };
-    // let temp = 0;
-    // if (this.props.wrapXAxisLables || this.props.showXAxisLablesTooltip) {
-    //   temp = xScale && (createWrapOfXLabels(wrapLabelProps) as number);
-    // }
-    // console.log(temp, 'temppppppppp');
+    if (this.props.wrapXAxisLables || this.props.showXAxisLablesTooltip) {
+      const wrapLabelProps = {
+        node: this.xAxisElement,
+        xAxis: xScale,
+        showXAxisLablesTooltip: this.props.showXAxisLablesTooltip || false,
+        noOfCharsToTruncate: this.props.noOfCharsToTruncate || 4,
+      };
+      const temp = xScale && (createWrapOfXLabels(wrapLabelProps) as number);
+      // this value need to be updated for draw graph updated. So instead of using private value, using set state.
+      if (this.state.isRemoveValCalculated && this.state._removalValueForTextTuncate !== temp) {
+        this.setState({ _removalValueForTextTuncate: temp, isRemoveValCalculated: false });
+      }
+    }
 
     /**
      * These scales used for 2 purposes.
@@ -201,7 +215,7 @@ export class CartesianChartBase extends React.Component<IModifiedCartesianChartP
                 this.xAxisElement = e;
               }}
               id={`xAxisGElement${this.idForGraph}`}
-              transform={`translate(0, ${svgDimensions.height - 35})`}
+              transform={`translate(0, ${svgDimensions.height - 35 - this.state._removalValueForTextTuncate!})`}
               className={this._classNames.xAxis}
             />
             <g
@@ -350,7 +364,6 @@ export class CartesianChartBase extends React.Component<IModifiedCartesianChartP
 
   private _fitParentContainer(): void {
     const { containerWidth, containerHeight } = this.state;
-
     this._reqID = requestAnimationFrame(() => {
       const legendContainerComputedStyles = getComputedStyle(this.legendContainer);
       const legendContainerHeight =
@@ -378,6 +391,11 @@ export class CartesianChartBase extends React.Component<IModifiedCartesianChartP
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private _getData = (xScale: any, yScale: any) => {
     this.props.getGraphData &&
-      this.props.getGraphData(xScale, yScale, this.state.containerHeight, this.state.containerWidth);
+      this.props.getGraphData(
+        xScale,
+        yScale,
+        this.state.containerHeight - this.state._removalValueForTextTuncate!,
+        this.state.containerWidth,
+      );
   };
 }
