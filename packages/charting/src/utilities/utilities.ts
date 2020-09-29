@@ -25,7 +25,7 @@ export enum XAxisTypes {
 }
 
 export interface IWrapLabelProps {
-  node: SVGGElement | null;
+  node: SVGElement | null;
   xAxis: NumericAxis | StringAxis;
   noOfCharsToTruncate: number;
   showXAxisLablesTooltip: boolean;
@@ -420,7 +420,7 @@ export function tooltipOfXAxislabels(xAxistooltipProps: any) {
     .attr('id', id)
     .attr('class', tooltipCls)
     .style('opacity', 0);
-  const tickObject = xAxis!.selectAll('.tick')._groups[0];
+  const tickObject = xAxis && xAxis!.selectAll('.tick')._groups[0];
   const tickObjectLength = Object.keys(tickObject).length;
   for (let i = 0; i < tickObjectLength; i++) {
     const d1 = tickObject[i];

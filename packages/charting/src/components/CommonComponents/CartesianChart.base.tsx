@@ -18,6 +18,8 @@ import {
   IMargins,
   getMinMaxOfYAxis,
   XAxisTypes,
+  // createWrapOfXLabels,
+  // tooltipOfXAxislabels,
 } from '../../utilities/index';
 import { ChartHoverCard } from '../../utilities/ChartHoverCard/index';
 import { FocusZone, FocusZoneDirection } from '@fluentui/react-focus';
@@ -137,6 +139,18 @@ export class CartesianChartBase extends React.Component<IModifiedCartesianChartP
       default:
         xScale = createNumericXAxis(XAxisParams, this._isRtl);
     }
+
+    // const wrapLabelProps = {
+    //   node: this.xAxisElement,
+    //   xAxis: xScale,
+    //   showXAxisLablesTooltip: this.props.showXAxisLablesTooltip || false,
+    //   noOfCharsToTruncate: this.props.noOfCharsToTruncate || 4,
+    // };
+    // let temp = 0;
+    // if (this.props.wrapXAxisLables || this.props.showXAxisLablesTooltip) {
+    //   temp = xScale && (createWrapOfXLabels(wrapLabelProps) as number);
+    // }
+    // console.log(temp, 'temppppppppp');
 
     /**
      * These scales used for 2 purposes.

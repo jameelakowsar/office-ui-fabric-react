@@ -1,4 +1,4 @@
-import { IGroupedVerticalBarChartStyleProps, IGroupedVerticalBarChartStyles } from '@uifabric/charting';
+import { IGroupedVerticalBarChartStyleProps, IGroupedVerticalBarChartStyles } from '../../index';
 
 export const getStyles = (props: IGroupedVerticalBarChartStyleProps): IGroupedVerticalBarChartStyles => {
   const { theme, href } = props;

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { GroupedVerticalBarChart } from '@uifabric/charting';
+import { ChartHoverCard, GroupedVerticalBarChart, IGVBarChartSeriesPoint } from '@uifabric/charting';
 import { DefaultPalette } from 'office-ui-fabric-react/lib/Styling';
 import { mergeStyles } from 'office-ui-fabric-react/lib/Styling';
 
@@ -104,6 +104,17 @@ export class GroupedVerticalBarChartBasic2Example extends React.Component<Readon
           showYAxisGridLines
           showXAxisLablesTooltip
           noOfCharsToTruncate={6}
+          // eslint-disable-next-line react/jsx-no-bind
+          onRenderCalloutPerDataPoint={(props: IGVBarChartSeriesPoint) =>
+            props ? (
+              <ChartHoverCard
+                XValue={props.xAxisCalloutData}
+                Legend={'Custom legend'}
+                YValue={`${props.data} h`}
+                color={'red'}
+              />
+            ) : null
+          }
         />
       </div>
     );

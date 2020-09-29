@@ -1,12 +1,12 @@
 import { IStyle } from 'office-ui-fabric-react/lib/Styling';
-import { IStyleFunctionOrObject } from 'office-ui-fabric-react/lib/Utilities';
+import { IRenderFunction, IStyleFunctionOrObject } from 'office-ui-fabric-react/lib/Utilities';
 import {
   ICartesianChartStyles,
   ICartesianChartStyleProps,
   ICartesianChartProps,
-  IChildProps,
   IGroupedVerticalBarChartData,
-} from '@uifabric/charting';
+  IGVBarChartSeriesPoint,
+} from '../../index';
 
 export interface IGroupedVerticalBarChartProps extends ICartesianChartProps {
   /**
@@ -60,6 +60,11 @@ export interface IGroupedVerticalBarChartProps extends ICartesianChartProps {
    * @deprecated
    */
   showYAxisPath?: boolean;
+
+  /**
+   * Define a custom callout renderer for a stack
+   */
+  onRenderCalloutPerDataPoint?: IRenderFunction<IGVBarChartSeriesPoint>;
 }
 
 export interface IGroupedVerticalBarChartStyleProps extends ICartesianChartStyleProps {}
