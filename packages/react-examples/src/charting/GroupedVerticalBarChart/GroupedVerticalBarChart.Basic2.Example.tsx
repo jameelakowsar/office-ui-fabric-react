@@ -130,8 +130,8 @@ export class GroupedVerticalBarChartBasic2Example extends React.Component<{}, IG
         <div style={rootStyle}>
           <GroupedVerticalBarChart
             data={data}
-            height={400}
-            width={650}
+            height={this.state.height}
+            width={this.state.width}
             showYAxisGridLines
             showXAxisLablesTooltip
             noOfCharsToTruncate={6}

@@ -432,8 +432,8 @@ export function tooltipOfXAxislabels(xAxistooltipProps: any) {
     .attr('id', id)
     .attr('class', tooltipCls)
     .style('opacity', 0);
-  const tickObject = xAxis && xAxis!.selectAll('.tick')._groups[0];
-  const tickObjectLength = Object.keys(tickObject).length;
+  const tickObject = xAxis!.selectAll('.tick')._groups[0];
+  const tickObjectLength = tickObject && Object.keys(tickObject)!.length;
   for (let i = 0; i < tickObjectLength; i++) {
     const d1 = tickObject[i];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

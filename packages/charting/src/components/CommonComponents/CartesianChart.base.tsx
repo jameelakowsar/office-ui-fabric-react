@@ -21,7 +21,6 @@ import {
   getMinMaxOfYAxis,
   XAxisTypes,
   createWrapOfXLabels,
-  // tooltipOfXAxislabels,
 } from '../../utilities/index';
 
 const getClassNames = classNamesFunction<ICartesianChartStyleProps, ICartesianChartStyles>();
@@ -114,6 +113,7 @@ export class CartesianChartBase extends React.Component<IModifiedCartesianChartP
       ),
       xAxisElement: this.xAxisElement!,
       showRoundOffXTickValues: true,
+      tickPadding: this.props.xAxisTickPadding,
     };
 
     const YAxisParams = {
@@ -396,6 +396,7 @@ export class CartesianChartBase extends React.Component<IModifiedCartesianChartP
         yScale,
         this.state.containerHeight - this.state._removalValueForTextTuncate!,
         this.state.containerWidth,
+        this.xAxisElement,
       );
   };
 }
