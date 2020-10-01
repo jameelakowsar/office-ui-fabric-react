@@ -1,12 +1,17 @@
 import * as React from 'react';
-import { AreaChart } from '@uifabric/charting';
-import { ILineChartProps } from '@uifabric/charting';
+import { AreaChart, ChartHoverCard, IAreaChartProps, ICustomizedCalloutData } from '@uifabric/charting';
 import { DefaultPalette } from 'office-ui-fabric-react/lib/Styling';
+import { ChoiceGroup, IChoiceGroupOption } from 'office-ui-fabric-react/lib/ChoiceGroup';
 
+const options: IChoiceGroupOption[] = [
+  { key: 'basicExample', text: 'Basic Example' },
+  { key: 'calloutExample', text: 'Custom Callout Example' },
+];
 interface IAreaChartBasicState {
   width: number;
   height: number;
   chartData: any;
+  isCalloutselected: boolean;
 }
 
 const chart1Points = [
@@ -171,12 +176,13 @@ const chartPoints2 = [
 ];
 
 export class AreaChartBasicExample extends React.Component<{}, IAreaChartBasicState> {
-  constructor(props: ILineChartProps) {
+  constructor(props: IAreaChartProps) {
     super(props);
     this.state = {
       width: 700,
       height: 300,
       chartData: chartPoints1,
+      isCalloutselected: false,
     };
   }
 
@@ -189,6 +195,14 @@ export class AreaChartBasicExample extends React.Component<{}, IAreaChartBasicSt
   };
   private _onHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({ height: parseInt(e.target.value, 10) });
+  };
+
+  private _onChange = (ev: React.FormEvent<HTMLInputElement>, option: IChoiceGroupOption): void => {
+    if (this.state.isCalloutselected) {
+      this.setState({ isCalloutselected: false });
+    } else {
+      this.setState({ isCalloutselected: true });
+    }
   };
 
   private _onDataChange = () => {
@@ -209,6 +223,8 @@ export class AreaChartBasicExample extends React.Component<{}, IAreaChartBasicSt
         <input type="range" value={this.state.width} min={200} max={1000} onChange={this._onWidthChange} />
         <label>change Height:</label>
         <input type="range" value={this.state.height} min={200} max={1000} onChange={this._onHeightChange} />
+        <ChoiceGroup options={options} defaultSelectedKey="basicExample" onChange={this._onChange} label="Pick one" />
+
         <button
           onClick={() => {
             this._onDataChange();
@@ -217,7 +233,23 @@ export class AreaChartBasicExample extends React.Component<{}, IAreaChartBasicSt
           Update data
         </button>
         <div style={rootStyle}>
-          <AreaChart height={this.state.height} width={this.state.width} data={chartData} showYAxisGridLines={true} />
+          <AreaChart
+            height={this.state.height}
+            width={this.state.width}
+            data={chartData}
+            showYAxisGridLines={true}
+            // eslint-disable-next-line react/jsx-no-bind
+            onRenderCalloutPerDataPoint={(props: ICustomizedCalloutData) =>
+              props && this.state.isCalloutselected ? (
+                <ChartHoverCard
+                  XValue={props.x.toString()}
+                  Legend={'Custom Legend'}
+                  YValue={`${props.values[0].yAxisCalloutData || props.values[0].y} h`}
+                  color={'red'}
+                />
+              ) : null
+            }
+          />
         </div>
       </>
     );

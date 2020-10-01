@@ -11,6 +11,7 @@ import {
   IAreaChartProps,
   IRefArrayData,
   IBasestate,
+  ICustomizedCalloutData,
   ILineChartDataPoint,
   ILineChartPoints,
 } from '../../index';
@@ -37,6 +38,8 @@ export interface IAreaChartState extends IBasestate {
   displayOfLine: string;
   activeCircleId: string;
   isCircleClicked: boolean;
+  dataPointCalloutProps?: ICustomizedCalloutData;
+  stackCalloutProps?: ICustomizedCalloutData;
 }
 
 export class AreaChartBase extends React.Component<IAreaChartProps, IAreaChartState> {
@@ -116,6 +119,7 @@ export class AreaChartBase extends React.Component<IAreaChartProps, IAreaChartSt
         tickParams={tickParams}
         maxOfYVal={stackedInfo.maxOfYVal}
         getGraphData={this._getGraphData}
+        customizedCallout={this._getCustomizedCallout()}
         /* eslint-disable react/jsx-no-bind */
         // eslint-disable-next-line react/no-children-prop
         children={() => {
@@ -204,6 +208,14 @@ export class AreaChartBase extends React.Component<IAreaChartProps, IAreaChartSt
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private _getGraphData = (xAxis: any, yAxis: any, containerHeight: number, containerWidth: number) => {
     this._chart = this._drawGraph(containerHeight, xAxis, yAxis);
+  };
+
+  private _getCustomizedCallout = () => {
+    return this.props.onRenderCalloutPerStack
+      ? this.props.onRenderCalloutPerStack(this.state.stackCalloutProps)
+      : this.props.onRenderCalloutPerDataPoint
+      ? this.props.onRenderCalloutPerDataPoint(this.state.dataPointCalloutProps)
+      : null;
   };
 
   private _onLegendClick(customMessage: string): void {
@@ -316,6 +328,8 @@ export class AreaChartBase extends React.Component<IAreaChartProps, IAreaChartSt
       displayOfLine: 'visibility',
       activeCircleId: circleId,
       isCircleClicked: false,
+      stackCalloutProps: found!,
+      dataPointCalloutProps: found!,
     });
   };
 
@@ -349,6 +363,8 @@ export class AreaChartBase extends React.Component<IAreaChartProps, IAreaChartSt
           displayOfLine: 'visibility',
           activeCircleId: circleId,
           isCircleClicked: false,
+          stackCalloutProps: found!,
+          dataPointCalloutProps: found!,
         });
       }
     });
