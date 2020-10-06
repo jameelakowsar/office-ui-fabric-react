@@ -299,7 +299,7 @@ export interface IChildProps {
   containerWidth?: number;
 }
 
-// Only used for Cartesian chart base
+// Only used for Cartesian chart Base
 export interface IModifiedCartesianChartProps extends ICartesianChartProps {
   /**
    * Only used for Area chart
