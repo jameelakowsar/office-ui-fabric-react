@@ -103,6 +103,7 @@ export class LineChartBase extends React.Component<ILineChartProps, ILineChartSt
   }
 
   public render(): JSX.Element {
+    console.log('hell');
     const { tickValues, tickFormat, eventAnnotationProps, legendProps } = this.props;
     this._points = this.props.data.lineChartData || [];
 
