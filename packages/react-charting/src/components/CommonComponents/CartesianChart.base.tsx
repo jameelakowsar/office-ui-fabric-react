@@ -227,16 +227,27 @@ export class CartesianChartBase extends React.Component<IModifiedCartesianChartP
       <div
         id={this.idForGraph}
         className={this._classNames.root}
-        role={'presentation'}
+        // role={'presentation'}
+        tabIndex={0}
         ref={(rootElem: HTMLDivElement) => (this.chartContainer = rootElem)}
       >
         <FocusZone direction={focusDirection} {...svgFocusZoneProps}>
-          <svg width={svgDimensions.width} height={svgDimensions.height} style={{ display: 'block' }} {...svgProps}>
+          <svg
+            width={svgDimensions.width}
+            height={svgDimensions.height}
+            role="graphics-document document"
+            style={{ display: 'block' }}
+            {...svgProps}
+          >
+            <title>this is A simple circuit</title>
             <g
               ref={(e: SVGElement | null) => {
                 this.xAxisElement = e;
               }}
               id={`xAxisGElement${this.idForGraph}`}
+              role="graphics-object"
+              aria-label="x Axis"
+              // tabIndex={0}
               // To add wrap of x axis lables feature, need to remove word height from svg height.
               transform={`translate(0, ${svgDimensions.height -
                 this.margins.bottom! -
@@ -248,6 +259,9 @@ export class CartesianChartBase extends React.Component<IModifiedCartesianChartP
                 this.yAxisElement = e;
               }}
               id={`yAxisGElement${this.idForGraph}`}
+              role="graphics-object"
+              aria-label="y Axis"
+              // tabIndex={0}
               transform={`translate(${
                 this._isRtl ? svgDimensions.width - this.margins.right! : this.margins.left!
               }, 0)`}

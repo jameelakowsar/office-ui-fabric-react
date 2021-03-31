@@ -91,7 +91,11 @@ export class HorizontalBarChartBase extends React.Component<IHorizontalBarChartP
                     {chartDataText}
                   </div>
                   {points!.chartData![0].data && this._createBenchmark(points!)}
-                  <svg className={this._classNames.chart}>
+                  <svg
+                    className={this._classNames.chart}
+                    role="graphics-document"
+                    aria-label="this is horizontal bar chart"
+                  >
                     <g
                       id={keyVal}
                       key={keyVal}

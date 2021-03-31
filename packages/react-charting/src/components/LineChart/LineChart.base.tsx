@@ -252,7 +252,7 @@ export class LineChartBase extends React.Component<ILineChartProps, ILineChartSt
                   visibility={'hidden'}
                   strokeDasharray={'5,5'}
                 />
-                <g>
+                <g role="graphics-object" aria-label="Line">
                   {this._renderedColorFillBars}
                   {this.lines}
                 </g>
@@ -526,6 +526,8 @@ export class LineChartBase extends React.Component<ILineChartProps, ILineChartSt
               strokeLinecap={'round'}
               opacity={1}
               onClick={this._onLineClick.bind(this, this._points[i].onLineClick)}
+              // role="graphics-symbol"
+              // aria-roledescription="line"
             />,
           );
           lines.push(
@@ -533,6 +535,8 @@ export class LineChartBase extends React.Component<ILineChartProps, ILineChartSt
               id={circleId}
               key={circleId}
               d={path}
+              role="graphics-symbol"
+              aria-roledescription="this is bar bar bar"
               data-is-focusable={i === 0 ? true : false}
               onMouseOver={this._handleHover.bind(this, x1, xAxisCalloutData, circleId)}
               onMouseMove={this._handleHover.bind(this, x1, xAxisCalloutData, circleId)}
